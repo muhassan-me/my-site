@@ -1,0 +1,992 @@
+[
+  {
+    "timestamp": "2026-10-04T15:05:16.957Z",
+    "locations": [
+      {
+        "slug": "port-said",
+        "name": "Port Said",
+        "participants": 79,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": true,
+        "governorate": "Port Said"
+      },
+      {
+        "slug": "6-of-october",
+        "name": "6 of October",
+        "participants": 460,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "alexandria",
+        "name": "Alexandria",
+        "participants": 620,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Alexandria"
+      },
+      {
+        "slug": "assiut",
+        "name": "Assiut",
+        "participants": 174,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Assiut"
+      },
+      {
+        "slug": "badr-city",
+        "name": "Badr City",
+        "participants": 57,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Cairo"
+      },
+      {
+        "slug": "cairo",
+        "name": "Cairo",
+        "participants": 2144,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Cairo"
+      },
+      {
+        "slug": "giza",
+        "name": "Giza",
+        "participants": 249,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "hurghada",
+        "name": "Hurghada",
+        "participants": 67,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Red Sea"
+      },
+      {
+        "slug": "kafr-elsheikh",
+        "name": "Kafr elsheikh",
+        "participants": 137,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Kafr El Sheikh"
+      },
+      {
+        "slug": "luxor",
+        "name": "Luxor",
+        "participants": 33,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Luxor"
+      },
+      {
+        "slug": "mansoura",
+        "name": "Mansoura",
+        "participants": 182,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Dakahlia"
+      },
+      {
+        "slug": "qena",
+        "name": "Qena",
+        "participants": 68,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Qena"
+      },
+      {
+        "slug": "salam-misr",
+        "name": "SALAM MISR",
+        "participants": 7,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": null
+      },
+      {
+        "slug": "shebeen-el-kom",
+        "name": "Shebeen El-Kom",
+        "participants": 689,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Monufia"
+      },
+      {
+        "slug": "sohag",
+        "name": "Sohag",
+        "participants": 337,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sohag"
+      },
+      {
+        "slug": "zagazig",
+        "name": "Zagazig",
+        "participants": 166,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sharqia"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-10-04T15:05:16.957Z",
+    "locations": [
+      {
+        "slug": "port-said",
+        "name": "Port Said",
+        "participants": 79,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": true,
+        "governorate": "Port Said"
+      },
+      {
+        "slug": "6-of-october",
+        "name": "6 of October",
+        "participants": 460,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "alexandria",
+        "name": "Alexandria",
+        "participants": 620,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Alexandria"
+      },
+      {
+        "slug": "assiut",
+        "name": "Assiut",
+        "participants": 174,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Assiut"
+      },
+      {
+        "slug": "badr-city",
+        "name": "Badr City",
+        "participants": 57,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Cairo"
+      },
+      {
+        "slug": "cairo",
+        "name": "Cairo",
+        "participants": 2144,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Cairo"
+      },
+      {
+        "slug": "giza",
+        "name": "Giza",
+        "participants": 249,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "hurghada",
+        "name": "Hurghada",
+        "participants": 67,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Red Sea"
+      },
+      {
+        "slug": "kafr-elsheikh",
+        "name": "Kafr elsheikh",
+        "participants": 137,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Kafr El Sheikh"
+      },
+      {
+        "slug": "luxor",
+        "name": "Luxor",
+        "participants": 33,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Luxor"
+      },
+      {
+        "slug": "mansoura",
+        "name": "Mansoura",
+        "participants": 182,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Dakahlia"
+      },
+      {
+        "slug": "qena",
+        "name": "Qena",
+        "participants": 68,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Qena"
+      },
+      {
+        "slug": "salam-misr",
+        "name": "SALAM MISR",
+        "participants": 7,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": null
+      },
+      {
+        "slug": "shebeen-el-kom",
+        "name": "Shebeen El-Kom",
+        "participants": 689,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Monufia"
+      },
+      {
+        "slug": "sohag",
+        "name": "Sohag",
+        "participants": 337,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sohag"
+      },
+      {
+        "slug": "zagazig",
+        "name": "Zagazig",
+        "participants": 166,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sharqia"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-10-04T15:05:16.957Z",
+    "locations": [
+      {
+        "slug": "port-said",
+        "name": "Port Said",
+        "participants": 79,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": true,
+        "governorate": "Port Said"
+      },
+      {
+        "slug": "6-of-october",
+        "name": "6 of October",
+        "participants": 460,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "alexandria",
+        "name": "Alexandria",
+        "participants": 620,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Alexandria"
+      },
+      {
+        "slug": "assiut",
+        "name": "Assiut",
+        "participants": 174,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Assiut"
+      },
+      {
+        "slug": "badr-city",
+        "name": "Badr City",
+        "participants": 57,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Beheira"
+      },
+      {
+        "slug": "cairo",
+        "name": "Cairo",
+        "participants": 2144,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Cairo"
+      },
+      {
+        "slug": "giza",
+        "name": "Giza",
+        "participants": 249,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "hurghada",
+        "name": "Hurghada",
+        "participants": 67,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Red Sea"
+      },
+      {
+        "slug": "kafr-elsheikh",
+        "name": "Kafr elsheikh",
+        "participants": 137,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Kafr El Sheikh"
+      },
+      {
+        "slug": "luxor",
+        "name": "Luxor",
+        "participants": 33,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Luxor"
+      },
+      {
+        "slug": "mansoura",
+        "name": "Mansoura",
+        "participants": 182,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Dakahlia"
+      },
+      {
+        "slug": "qena",
+        "name": "Qena",
+        "participants": 68,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Qena"
+      },
+      {
+        "slug": "salam-misr",
+        "name": "SALAM MISR",
+        "participants": 7,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": null
+      },
+      {
+        "slug": "shebeen-el-kom",
+        "name": "Shebeen El-Kom",
+        "participants": 689,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Monufia"
+      },
+      {
+        "slug": "sohag",
+        "name": "Sohag",
+        "participants": 337,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sohag"
+      },
+      {
+        "slug": "zagazig",
+        "name": "Zagazig",
+        "participants": 166,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sharqia"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-10-04T16:36:57.969Z",
+    "locations": [
+      {
+        "slug": "port-said",
+        "name": "Port Said",
+        "participants": 79,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": true,
+        "governorate": "Port Said"
+      },
+      {
+        "slug": "6-of-october",
+        "name": "6 of October",
+        "participants": 461,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "alexandria",
+        "name": "Alexandria",
+        "participants": 620,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Alexandria"
+      },
+      {
+        "slug": "assiut",
+        "name": "Assiut",
+        "participants": 174,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Assiut"
+      },
+      {
+        "slug": "badr-city",
+        "name": "Badr City",
+        "participants": 57,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Beheira"
+      },
+      {
+        "slug": "cairo",
+        "name": "Cairo",
+        "participants": 2147,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Cairo"
+      },
+      {
+        "slug": "giza",
+        "name": "Giza",
+        "participants": 249,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "hurghada",
+        "name": "Hurghada",
+        "participants": 67,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Red Sea"
+      },
+      {
+        "slug": "kafr-elsheikh",
+        "name": "Kafr elsheikh",
+        "participants": 137,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Kafr El Sheikh"
+      },
+      {
+        "slug": "luxor",
+        "name": "Luxor",
+        "participants": 33,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Luxor"
+      },
+      {
+        "slug": "mansoura",
+        "name": "Mansoura",
+        "participants": 183,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Dakahlia"
+      },
+      {
+        "slug": "qena",
+        "name": "Qena",
+        "participants": 68,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Qena"
+      },
+      {
+        "slug": "salam-misr",
+        "name": "SALAM MISR",
+        "participants": 7,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": null
+      },
+      {
+        "slug": "shebeen-el-kom",
+        "name": "Shebeen El-Kom",
+        "participants": 689,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Monufia"
+      },
+      {
+        "slug": "sohag",
+        "name": "Sohag",
+        "participants": 337,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sohag"
+      },
+      {
+        "slug": "zagazig",
+        "name": "Zagazig",
+        "participants": 166,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sharqia"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-10-04T17:53:52.240Z",
+    "locations": [
+      {
+        "slug": "port-said",
+        "name": "Port Said",
+        "participants": 79,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": true,
+        "governorate": "Port Said"
+      },
+      {
+        "slug": "6-of-october",
+        "name": "6 of October",
+        "participants": 461,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "alexandria",
+        "name": "Alexandria",
+        "participants": 620,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Alexandria"
+      },
+      {
+        "slug": "assiut",
+        "name": "Assiut",
+        "participants": 174,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Assiut"
+      },
+      {
+        "slug": "badr-city",
+        "name": "Badr City",
+        "participants": 57,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Beheira"
+      },
+      {
+        "slug": "cairo",
+        "name": "Cairo",
+        "participants": 2147,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Cairo"
+      },
+      {
+        "slug": "giza",
+        "name": "Giza",
+        "participants": 249,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "hurghada",
+        "name": "Hurghada",
+        "participants": 67,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Red Sea"
+      },
+      {
+        "slug": "kafr-elsheikh",
+        "name": "Kafr elsheikh",
+        "participants": 137,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Kafr El Sheikh"
+      },
+      {
+        "slug": "luxor",
+        "name": "Luxor",
+        "participants": 33,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Luxor"
+      },
+      {
+        "slug": "mansoura",
+        "name": "Mansoura",
+        "participants": 183,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Dakahlia"
+      },
+      {
+        "slug": "qena",
+        "name": "Qena",
+        "participants": 68,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Qena"
+      },
+      {
+        "slug": "salam-misr",
+        "name": "SALAM MISR",
+        "participants": 7,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": null
+      },
+      {
+        "slug": "shebeen-el-kom",
+        "name": "Shebeen El-Kom",
+        "participants": 689,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Monufia"
+      },
+      {
+        "slug": "sohag",
+        "name": "Sohag",
+        "participants": 337,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sohag"
+      },
+      {
+        "slug": "zagazig",
+        "name": "Zagazig",
+        "participants": 166,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sharqia"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-10-04T17:54:10.799Z",
+    "locations": [
+      {
+        "slug": "port-said",
+        "name": "Port Said",
+        "participants": 79,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": true,
+        "governorate": "Port Said"
+      },
+      {
+        "slug": "6-of-october",
+        "name": "6 of October",
+        "participants": 462,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "alexandria",
+        "name": "Alexandria",
+        "participants": 620,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Alexandria"
+      },
+      {
+        "slug": "assiut",
+        "name": "Assiut",
+        "participants": 174,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Assiut"
+      },
+      {
+        "slug": "badr-city",
+        "name": "Badr City",
+        "participants": 57,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Beheira"
+      },
+      {
+        "slug": "cairo",
+        "name": "Cairo",
+        "participants": 2149,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Cairo"
+      },
+      {
+        "slug": "giza",
+        "name": "Giza",
+        "participants": 250,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "hurghada",
+        "name": "Hurghada",
+        "participants": 67,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Red Sea"
+      },
+      {
+        "slug": "kafr-elsheikh",
+        "name": "Kafr elsheikh",
+        "participants": 137,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Kafr El Sheikh"
+      },
+      {
+        "slug": "luxor",
+        "name": "Luxor",
+        "participants": 33,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Luxor"
+      },
+      {
+        "slug": "mansoura",
+        "name": "Mansoura",
+        "participants": 183,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Dakahlia"
+      },
+      {
+        "slug": "qena",
+        "name": "Qena",
+        "participants": 68,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Qena"
+      },
+      {
+        "slug": "salam-misr",
+        "name": "SALAM MISR",
+        "participants": 7,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": null
+      },
+      {
+        "slug": "shebeen-el-kom",
+        "name": "Shebeen El-Kom",
+        "participants": 691,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Monufia"
+      },
+      {
+        "slug": "sohag",
+        "name": "Sohag",
+        "participants": 338,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sohag"
+      },
+      {
+        "slug": "zagazig",
+        "name": "Zagazig",
+        "participants": 166,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sharqia"
+      }
+    ]
+  }
+]

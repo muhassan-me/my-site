@@ -1,0 +1,8 @@
+paste.json
+data_test/
+.env
+*.env
+.venv/
+__pycache__/
+*.pyc
+update.ps1
