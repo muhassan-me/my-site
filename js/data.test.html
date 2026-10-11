@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <title>Data tests</title>
+  <script src="js/data.js"></script>
+</head>
+<body>
+  <h1>Data tests</h1>
+  <pre id="out"></pre>
+  <script>
+    const out = [];
+    function check(name, cond) {
+      out.push((cond ? "PASS" : "FAIL") + ": " + name);
+    }
+
+    // tie-aware ranking
+    const list = [
+      { name: "A", participants: 100 },
+      { name: "B", participants: 100 },
+      { name: "C", participants: 90 }
+    ];
+    const ranked = rankLocations(list);
+    check("tie-aware equal share rank", ranked[0].rank === 1 && ranked[1].rank === 1);
+    check("tie-aware next rank after ties", ranked[2].rank === 3);
+
+    // countryTotals
+    const latest = { countries: { Egypt: [{ name: "Cairo", participants: 100 }, { name: "Giza", participants: 50 }] } };
+    const totals = countryTotals(latest);
+    check("countryTotals participants sum", totals.Egypt.participants === 150);
+    check("countryTotals location count", totals.Egypt.locations === 2);
+
+    // slugify
+    check("slugify 6 of October", slugify("6 of October") === "6-of-october");
+
+    document.getElementById("out").textContent = out.join("\n");
+  </script>
+</body>
+</html>

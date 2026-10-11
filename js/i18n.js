@@ -1,0 +1,102 @@
+// i18n strings for Space Apps Local Events Tracker
+const STRINGS = {
+  ar: {
+    rank: "الترتيب",
+    location: "الموقع",
+    governorate: "المحافظة",
+    participants: "المشاركون",
+    share: "النسبة من الإجمالي",
+    change: "التغير",
+    virtual: "افتراضي",
+    inPerson: "anni",
+    accepting: "يقبل",
+    lastUpdated: "آخر(actual)ديث",
+    search: "بحث",
+    unmapped: "غير مصنف",
+    country: "البلاد",
+    allCountries: "كل الدول",
+    pastYears: "السنوات السابقة",
+    currentYear: "جاري",
+    totalParticipants: "إجمالي الم PARTICIPANTS",
+    totalLocations: "عدد المواقع",
+    totalCountries: "عدد الدول",
+    topLocation: "الأعلى",
+    rising: "يرتفع",
+    new: "جديد",
+    noResults: "لا توجد نتائج",
+    noData: "لا توجد بيانات",
+    footer: "غير رسمي. العدد من نسخ من page Space Apps العامة في",
+    languageToggle: "English",
+    detailDrawer: "تفاصيل",
+    close: "إغلاق",
+    trend24h: "آخر 24 ساعة",
+    trendPrev: "السابقة",
+    pin: "ثبّت مكاني",
+    compare: "قارن",
+    export: "تصدير",
+    copySummary: "نسخ ملخص",
+    goalProgress: "الهدف",
+    freshnessWarning: "البيانات قديمة",
+    selectCountry: "اختر دولة",
+    leaderboard: "قائمة الدول",
+    region: "المنطقة",
+    showRegions: "عرض المناطق",
+    showGovernorates: "عرض المحافظات",
+    rankMovement: "حركة الترتيب"
+  },
+  en: {
+    rank: "Rank",
+    location: "Location",
+    governorate: "Governorate",
+    participants: "Participants",
+    share: "Share of total",
+    change: "Change",
+    virtual: "Virtual",
+    inPerson: "In-person",
+    accepting: "Accepting",
+    lastUpdated: "Last updated",
+    search: "Search",
+    unmapped: "Unmapped",
+    country: "Country",
+    allCountries: "All countries",
+    pastYears: "Past years",
+    currentYear: "Current",
+    totalParticipants: "Total participants",
+    totalLocations: "Locations",
+    totalCountries: "Countries",
+    topLocation: "Top",
+    rising: "Rising",
+    new: "New",
+    noResults: "No results",
+    noData: "No data",
+    footer: "Unofficial. Counts copied from the public Space Apps page on",
+    languageToggle: "العربية",
+    detailDrawer: "Details",
+    close: "Close",
+    trend24h: "Last 24h",
+    trendPrev: "Previous",
+    pin: "Pin my location",
+    compare: "Compare",
+    export: "Export",
+    copySummary: "Copy summary",
+    goalProgress: "Goal progress",
+    freshnessWarning: "Data is stale",
+    selectCountry: "Select country",
+    leaderboard: "Leaderboard",
+    region: "Region",
+    showRegions: "Show regions",
+    showGovernorates: "Show governorates",
+    rankMovement: "Rank movement"
+  }
+};
+
+function t(key) {
+  const lang = document.documentElement.lang || "ar";
+  const table = STRINGS[lang] || STRINGS.ar;
+  return table[key] || STRINGS.ar[key] || key;
+}
+
+function setLang(lang) {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+}
