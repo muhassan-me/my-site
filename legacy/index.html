@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ترتيب مواقع ناسا سبيس آبس 2026 في مصر</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ترتيب مواقع ناسا سبيس آبس 2026 في مصر</h1>
+            <div id="last-updated">آخر تحديث: <span id="timestamp">جارٍ التحميل...</span></div>
+        </header>
+
+        <main>
+            <!-- 2026 Section (Default and Dominant) -->
+            <section class="year-section current-year">
+                <h2>جاري (2026)</h2>
+                
+                <!-- Summary Cards -->
+                <div class="summary-cards" id="summary-2026">
+                    <!-- Cards will be populated by JS -->
+                </div>
+                
+                <!-- Search Box -->
+                <div class="search-box">
+                    <input type="text" id="search-2026" placeholder="بحث...">
+                </div>
+                
+                <!-- Ranking Table -->
+                <table id="ranking-table-2026">
+                    <thead>
+                        <tr>
+                            <th>الترتيب</th>
+                            <th>الموقع</th>
+                            <th>المحافظة</th>
+                            <th>المشاركون</th>
+                            <th>النسبة من الإجمالي</th>
+                            <th>الرموز</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be populated by JS -->
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Past Years Section -->
+            <section class="year-section past-years">
+                <h2>السنوات السابقة / Past years</h2>
+                
+                <!-- Year Selector -->
+                <div class="year-selector">
+                    <label for="year-select">اختر السنة:</label>
+                    <select id="year-select">
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                    </select>
+                </div>
+                
+                <!-- Summary for selected year -->
+                <div class="summary-cards" id="summary-past">
+                    <!-- Cards will be populated by JS -->
+                </div>
+                
+                <!-- Search Box for past years -->
+                <div class="search-box">
+                    <input type="text" id="search-past" placeholder="بحث...">
+                </div>
+                
+                <!-- Ranking Table for past years -->
+                <table id="ranking-table-past">
+                    <thead>
+                        <tr>
+                            <th>الترتيب</th>
+                            <th>الموقع</th>
+                            <th>المحافظة</th>
+                            <th>المشاركون</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be populated by JS -->
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Comparison Chart -->
+            <section class="chart-section">
+                <h2>مقارنة إجمالي المشاركين حسب السنة</h2>
+                <div id="comparison-chart">
+                    <!-- SVG bar chart will be drawn here -->
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

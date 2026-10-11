@@ -9,6 +9,11 @@ async function loadAll() {
   return { latest, history, regions, past };
 }
 
+function normalizeCountries(latest) {
+  if (latest.countries && typeof latest.countries === "object") return latest.countries;
+  return latest.locations ? { Egypt: latest.locations } : {};
+}
+
 function rankLocations(list) {
   const sorted = [...list].sort((a, b) => (b.participants || 0) - (a.participants || 0));
   let rank = 1;
@@ -50,10 +55,10 @@ function slugify(name) {
 }
 
 function groupByRegion(list, regionsForCountry) {
-  if (!regionsForCountry) return { Ungrouped: list };
+  if (!regionsForCountry) return { [t("unmapped")]: list };
   const groups = {};
   for (const loc of list) {
-    const region = regionsForCountry[loc.name] || "Ungrouped";
+    const region = regionsForCountry[loc.name] || t("unmapped");
     if (!groups[region]) groups[region] = [];
     groups[region].push(loc);
   }
