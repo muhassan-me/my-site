@@ -1,0 +1,56 @@
+/* Design tokens */
+:root {
+  /* Colors */
+  --bg: #0a1228;
+  --bg-elev: #111c38;
+  --bg-card: #16223f;
+  --border: #2a3a5c;
+  --border-soft: #1e2c4a;
+  --text: #e8eefc;
+  --text-dim: #9fb0d0;
+  --text-faint: #6b7ea0;
+  --accent: #b6ff3a;
+  --accent-soft: rgba(182, 255, 58, 0.15);
+  --warm: #ffb84d;
+  --danger: #ff5d5d;
+  --ok: #4ade80;
+
+  /* 8px spacing grid */
+  --space-0: 0;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --space-10: 80px;
+
+  /* Type scale */
+  --step--1: 11px;
+  --step-0: 13px;
+  --step-1: 15px;
+  --step-2: 18px;
+  --step-3: 21px;
+  --step-4: 24px;
+  --step-5: 30px;
+  --step-6: 38px;
+  --step-7: 48px;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  /* Motion */
+  --motion-fast: 150ms;
+  --motion: 250ms;
+  --motion-slow: 400ms;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Layout */
+  --topbar-h: 56px;
+  --drawer-w: 320px;
+  --container: 1200px;
+}

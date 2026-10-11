@@ -1,0 +1,159 @@
+/* Components */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+}
+.card h4 {
+  font-size: var(--step-1);
+  color: var(--text-dim);
+  margin-bottom: var(--space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.card .value {
+  font-size: var(--step-5);
+  font-weight: 700;
+  color: var(--text);
+}
+.card .value.rising { color: var(--warm); }
+.card .value.new { color: var(--accent); }
+
+/* Table */
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  font-size: var(--step-1);
+}
+th, td {
+  padding: var(--space-2);
+  text-align: start;
+  border-bottom: 1px solid var(--border-soft);
+}
+thead th {
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: var(--step--1);
+  letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+}
+tbody tr { transition: background var(--motion); }
+tbody tr:hover { background: rgba(255,255,255,0.03); }
+tbody tr.current-rank { background: var(--accent-soft); }
+td.rank { color: var(--accent); font-weight: 700; }
+td.num, th.num { text-align: end; }
+
+/* Text chips */
+.chip-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--step--1);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(255,255,255,0.06);
+  color: var(--text-dim);
+  border: 1px solid var(--border-soft);
+  margin: 2px;
+}
+.chip-text.virtual { color: #7ec8ff; }
+.chip-text.inperson { color: var(--accent); }
+.chip-text.accepting { color: var(--warm); }
+.chip-text.new { color: var(--ok); }
+.chip-text.rising { color: var(--warm); }
+
+/* Combobox */
+.combobox {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+}
+.combobox input {
+  width: 100%;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: var(--step-1);
+}
+.combobox input:focus { border-color: var(--accent); }
+.combobox .list {
+  position: absolute;
+  top: 100%;
+  left: 0; right: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  z-index: 60;
+  display: none;
+}
+.combobox .list.open { display: block; }
+.combobox .item {
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.combobox .item:hover, .combox .item.active { background: var(--bg-card); }
+.combobox .item .count { color: var(--text-faint); font-size: var(--step--1); }
+
+/* Buttons */
+.btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  font-size: var(--step-1);
+  cursor: pointer;
+  transition: background var(--motion), border-color var(--motion), transform var(--motion-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn:hover { border-color: var(--accent); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--accent); color: #06230a; border-color: var(--accent); font-weight: 600; }
+.btn.ghost { background: transparent; }
+.btn.icon { padding: 8px; }
+
+/* Toggle */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--step-1);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.toggle .track {
+  width: 36px; height: 20px;
+  background: var(--border);
+  border-radius: var(--radius-pill);
+  position: relative;
+  transition: background var(--motion);
+}
+.toggle .track::after {
+  content: "";
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: transform var(--motion), background var(--motion);
+}
+.toggle input:checked + .track { background: var(--accent); }
+.toggle input:checked + .track::after { transform: translateX(16px); background: #06230a; }
