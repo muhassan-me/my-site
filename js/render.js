@@ -2,7 +2,12 @@ function renderGlobalStats(data) {
   const countries = Object.values(data.countries);
   const totals = countryTotals({ countries: data.countries });
   const count = countries.reduce((sum, locations) => sum + locations.length, 0);
-  const participants = Object.values(totals).reduce((sum, country) => sum + country.participants, 0);
+  const locationRows = countries.flat();
+  const unknownCounts = locationRows.some(location => !Number.isFinite(location.participants)) ||
+    data.globalEvents.some(event => !Number.isFinite(event.participants));
+  const localParticipants = Object.values(totals).reduce((sum, country) => sum + (country.participants || 0), 0);
+  const globalParticipants = data.globalEvents.reduce((sum, event) => sum + (event.participants || 0), 0);
+  const participants = unknownCounts ? t("notReported") : localParticipants + globalParticipants;
   const stats = [
     [t("totalParticipants"), participants],
     [t("totalCountries"), countries.length],
@@ -19,10 +24,10 @@ function renderGlobalStats(data) {
     const number = document.createElement("span");
     number.className = "value nums";
     number.dataset.count = value;
-    number.textContent = "0";
+    number.textContent = typeof value === "number" ? "0" : value;
     item.append(name, number);
     host.append(item);
-    countUp(number, Number(value));
+    if (typeof value === "number") countUp(number, value);
   });
 }
 
@@ -43,7 +48,12 @@ function countUp(element, end) {
 function renderLeaderboard(data) {
   const host = document.getElementById("leaderboard");
   const totals = countryTotals({ countries: data.countries });
-  const rows = Object.keys(data.countries).sort((a, b) => totals[b].participants - totals[a].participants);
+  const rows = Object.keys(data.countries).sort((a, b) => {
+    const aTotal = totals[a].participants;
+    const bTotal = totals[b].participants;
+    if (!Number.isFinite(aTotal) || !Number.isFinite(bTotal)) return Number.isFinite(aTotal) ? -1 : Number.isFinite(bTotal) ? 1 : a.localeCompare(b);
+    return bTotal - aTotal;
+  });
   host.replaceChildren();
   if (!rows.length) return showEmpty(host, 1);
   rows.forEach((country, index) => {
@@ -59,7 +69,7 @@ function renderLeaderboard(data) {
     name.textContent = country;
     const metric = document.createElement("span");
     metric.className = "leader-metric";
-    metric.textContent = totals[country].participants.toLocaleString();
+    metric.textContent = Number.isFinite(totals[country].participants) ? totals[country].participants.toLocaleString() : t("notReported");
     const detail = document.createElement("small");
     detail.textContent = `${totals[country].locations} ${t("locations")}`;
     metric.append(detail);
@@ -70,12 +80,15 @@ function renderLeaderboard(data) {
 
 function renderCountry(data, country, search, regionMode) {
   const locations = rankLocations(data.countries[country] || []);
-  const total = locations.reduce((sum, item) => sum + (item.participants || 0), 0);
-  const regions = data.regions[country] || {};
+  const hasUnknownCounts = locations.some(item => !Number.isFinite(item.participants));
+  const total = locations.reduce((sum, item) => sum + (Number.isFinite(item.participants) ? item.participants : 0), 0);
+  const regionKey = Object.keys(data.regions).find(name => name.toLocaleLowerCase() === country.toLocaleLowerCase());
+  const regions = regionKey ? data.regions[regionKey] : {};
   const hasRegions = Object.keys(regions).length > 0;
   document.getElementById("country-title").textContent = country;
   document.getElementById("country-eyebrow").textContent = t("countryView");
-  document.getElementById("country-total").textContent = `${total.toLocaleString()} ${t("participantsShort")}`;
+  document.getElementById("country-total").textContent = `${hasUnknownCounts ? t("partialTotal") : total.toLocaleString()} ${t("participantsShort")}`;
+  document.getElementById("country-provenance").textContent = data.provenanceLabel || "";
   document.getElementById("region-toggle").classList.toggle("hidden", !hasRegions);
   document.getElementById("region-toggle").textContent = regionMode ? t("showGovernorates") : t("showRegions");
   document.getElementById("th-rank").textContent = t("rank");
@@ -92,22 +105,40 @@ function renderCountry(data, country, search, regionMode) {
     const row = document.createElement("tr");
     const rank = document.createElement("td");
     rank.className = "rank";
-    rank.textContent = String(item.rank);
+    rank.textContent = item.rank === null ? "-" : String(item.rank);
     const name = document.createElement("td");
     const link = document.createElement("button");
     link.className = "location-link";
     link.type = "button";
-    link.dataset.location = item.slug || slugify(item.name);
+    link.dataset.location = getLocationSlug(item, locations);
     link.textContent = item.name;
     name.append(link);
+    if (item.eventSite) {
+      const site = document.createElement("small");
+      site.className = "record-source";
+      site.textContent = item.eventSite;
+      name.append(site);
+    }
+    if (item.verification) {
+      const source = item.provenance?.find(entry => entry.sourceUrl);
+      const sourceLabel = source && /^https?:\/\//i.test(source.sourceUrl) ? document.createElement("a") : document.createElement("small");
+      sourceLabel.className = "record-source";
+      sourceLabel.textContent = t(item.verification === "incomplete" ? "workbookIncompleteShort" : "sourceCapturedShort");
+      if (sourceLabel.tagName === "A") {
+        sourceLabel.href = source.sourceUrl;
+        sourceLabel.target = "_blank";
+        sourceLabel.rel = "noopener noreferrer";
+      }
+      name.append(sourceLabel);
+    }
     const place = document.createElement("td");
     place.textContent = hasRegions && regionMode ? (regions[item.name] || item.governorate || "") : (item.governorate || "");
     const participants = document.createElement("td");
     participants.className = "num";
-    participants.textContent = (item.participants || 0).toLocaleString();
+    participants.textContent = Number.isFinite(item.participants) ? item.participants.toLocaleString() : t("notReported");
     const share = document.createElement("td");
     share.className = "num";
-    share.textContent = `${total ? ((item.participants || 0) / total * 100).toFixed(1) : "0.0"}%`;
+    share.textContent = Number.isFinite(item.participants) && total && !hasUnknownCounts ? `${(item.participants / total * 100).toFixed(1)}%` : t("notReported");
     row.append(rank, name, place, participants, share);
     tbody.append(row);
   });
@@ -119,7 +150,12 @@ function renderCountryOptions(data, query) {
   const term = query.trim().toLocaleLowerCase();
   host.replaceChildren();
   Object.keys(data.countries).filter(name => name.toLocaleLowerCase().includes(term))
-    .sort((a, b) => totals[b].participants - totals[a].participants).forEach(name => {
+    .sort((a, b) => {
+      const aTotal = totals[a].participants;
+      const bTotal = totals[b].participants;
+      if (!Number.isFinite(aTotal) || !Number.isFinite(bTotal)) return Number.isFinite(aTotal) ? -1 : Number.isFinite(bTotal) ? 1 : a.localeCompare(b);
+      return bTotal - aTotal;
+    }).forEach(name => {
       const option = document.createElement("button");
       option.className = "item";
       option.type = "button";
@@ -129,7 +165,7 @@ function renderCountryOptions(data, query) {
       label.textContent = name;
       const count = document.createElement("span");
       count.className = "count";
-      count.textContent = totals[name].participants.toLocaleString();
+      count.textContent = Number.isFinite(totals[name].participants) ? totals[name].participants.toLocaleString() : t("notReported");
       option.append(label, count);
       host.append(option);
     });
@@ -142,7 +178,7 @@ function renderDrawer(location, country) {
   body.replaceChildren();
   const count = document.createElement("p");
   count.className = "drawer-stat nums";
-  count.textContent = `${(location.participants || 0).toLocaleString()} ${t("participants")}`;
+  count.textContent = `${Number.isFinite(location.participants) ? location.participants.toLocaleString() : t("notReported")} ${t("participants")}`;
   const chips = document.createElement("div");
   chips.className = "drawer-chips";
   [["virtual", location.virtual], ["inPerson", location.inPerson], ["accepting", location.accepting]].forEach(([key, active]) => {
@@ -154,8 +190,15 @@ function renderDrawer(location, country) {
   });
   const countryName = document.createElement("p");
   countryName.className = "drawer-country";
-  countryName.textContent = country;
-  body.append(count, chips, countryName);
+  countryName.textContent = `${location.city || ""}${location.city ? ", " : ""}${country}`;
+  body.append(count);
+  if (Number.isFinite(location.teams)) {
+    const teams = document.createElement("p");
+    teams.className = "drawer-country";
+    teams.textContent = `${location.teams.toLocaleString()} ${t("teams")}`;
+    body.append(teams);
+  }
+  body.append(chips, countryName);
 }
 
 function showEmpty(host, columns) {

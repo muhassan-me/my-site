@@ -42,7 +42,7 @@ def compact_history(history, new_snapshot, now):
 
 
 def _counts_equal(a, b):
-    """Check if two snapshots have the same location counts per country and total participants."""
+    """Check whether country/location counts and global-event counts are unchanged."""
     a_countries = a.get('countries', {})
     b_countries = b.get('countries', {})
 
@@ -54,11 +54,15 @@ def _counts_equal(a, b):
         b_locs = b_countries[country]
         if len(a_locs) != len(b_locs):
             return False
-        # Compare total participants
-        a_total = sum(loc.get('participants', 0) for loc in a_locs)
-        b_total = sum(loc.get('participants', 0) for loc in b_locs)
-        if a_total != b_total:
+        def signature(locations):
+            return sorted(
+                (loc.get('slug') or loc.get('name', ''), loc.get('participants', 0))
+                for loc in locations
+            )
+        if signature(a_locs) != signature(b_locs):
             return False
+    if a.get('globalEvents', []) != b.get('globalEvents', []):
+        return False
     return True
 
 

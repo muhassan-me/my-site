@@ -10,6 +10,9 @@ body { min-height: 100%; }
 .global-stat .label { color: var(--text-dim); font-size: var(--step-0); }
 .global-stat .value { display: block; color: var(--accent); font-size: var(--step-6); font-weight: 700; }
 .country-picker { position: relative; z-index: 10; margin-top: var(--space-3); }
+.edition-control { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-2) 0 var(--space-4); color: var(--text-dim); }
+.edition-control select { min-height: 44px; min-width: 190px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); color: var(--text); padding: 8px 12px; }
+#edition-status { font-size: var(--step-0); }
 .country-picker .combobox { max-width: 100%; }
 .country-picker input, .search-input, .year-control select { min-height: 44px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); color: var(--text); padding: 8px 12px; }
 .country-picker input { padding-inline-start: 40px; }
@@ -19,16 +22,19 @@ body { min-height: 100%; }
 .country-heading { display: flex; align-items: end; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-3); }
 .country-heading h2 { margin: 0; }
 .country-total { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.edition-provenance { color: var(--warm); font-size: var(--step-0); margin: -12px 0 var(--space-2); }
 .country-toolbar { display: flex; gap: var(--space-2); align-items: center; margin-bottom: var(--space-2); }
 .search-input { flex: 1; min-width: 0; }
 .table-wrap { border-radius: var(--radius-sm); }
 .location-link { border: 0; background: none; color: var(--text); padding: 0; text-align: start; cursor: pointer; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
 .location-link:hover { color: var(--accent); text-decoration-color: currentColor; }
+.record-source { display: block; color: var(--text-faint); font-size: var(--step--1); }
 td.rank { white-space: nowrap; }
 .empty-cell { padding: var(--space-4); color: var(--text-dim); text-align: center; }
 .leaderboard { border-top: 1px solid var(--border); }
 .leader-row { width: 100%; display: grid; grid-template-columns: 44px minmax(0,1fr) minmax(90px, 150px); gap: var(--space-2); align-items: center; padding: 14px 8px; border: 0; border-bottom: 1px solid var(--border-soft); background: transparent; color: var(--text); text-align: start; cursor: pointer; }
 .leader-row:hover { background: rgba(255,255,255,.035); }
+.global-event-row { cursor: default; }
 .leader-rank { color: var(--text-faint); font-size: var(--step-0); }
 .leader-country { font-weight: 600; }
 .leader-metric { text-align: end; color: var(--accent); font-variant-numeric: tabular-nums; }
@@ -46,6 +52,8 @@ td.rank { white-space: nowrap; }
 .chart-row.current .chart-bar { background: var(--accent); }
 .chart-row.current .chart-year, .chart-row.current .chart-value { color: var(--accent); font-weight: 700; }
 .chart-value { text-align: end; font-variant-numeric: tabular-nums; }
+.chart-row.unavailable { color: var(--text-faint); }
+.chart-row.unavailable .chart-track { background: repeating-linear-gradient(135deg, var(--bg-elev), var(--bg-elev) 4px, transparent 4px, transparent 8px); }
 #notice { color: var(--warm); margin: var(--space-2) 0; }
 #notice:empty { display: none; }
 .drawer-scrim { position: fixed; inset: 0; z-index: 99; background: rgba(0,0,0,.62); border: 0; opacity: 0; visibility: hidden; transition: opacity var(--motion); }
@@ -63,6 +71,8 @@ td.rank { white-space: nowrap; }
   .global-grid { grid-template-columns: repeat(2, 1fr); }
   .global-stat .value { font-size: var(--step-4); }
   .country-heading { align-items: start; flex-direction: column; }
+  .edition-control { align-items: stretch; flex-direction: column; }
+  .edition-control select { width: 100%; }
   .country-toolbar { align-items: stretch; flex-direction: column; }
   .country-toolbar .btn { align-self: start; }
   .leader-row { grid-template-columns: 32px minmax(0,1fr) minmax(76px, auto); padding-inline: 2px; }

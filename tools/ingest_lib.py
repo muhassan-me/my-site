@@ -119,8 +119,10 @@ def process_locations_data(raw_locations, data_dir, captured_at=None):
         try:
             with open(history_file, 'r', encoding='utf-8') as f:
                 history = json.load(f)
-        except Exception:
-            history = []
+        except (OSError, json.JSONDecodeError) as e:
+            raise ValueError(f"Could not read {history_file}; original preserved: {e}") from e
+        if not isinstance(history, list):
+            raise ValueError(f"Invalid history data in {history_file}; original preserved")
     history.append(snapshot)
     
     with open(history_file, 'w', encoding='utf-8') as f:

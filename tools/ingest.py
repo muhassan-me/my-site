@@ -162,6 +162,7 @@ def main():
 
     data_dir = Path(args.data_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
+    global_events = []
 
     if args.fetch:
         if args.input_file:
@@ -188,26 +189,11 @@ def main():
             except Exception as e:
                 print(f"Error: Could not read JSON file {input_path}: {e}", file=sys.stderr)
                 sys.exit(1)
-            if 'locations' not in data:
-                print(f"Error: JSON file missing 'locations' key", file=sys.stderr)
+            if not isinstance(data, dict) or not isinstance(data.get('countries'), dict):
+                print("Error: JSON import requires country-grouped 'countries'; flat locations are unverified", file=sys.stderr)
                 sys.exit(1)
-            # Convert old format to new format: assume it's Egypt-only
-            old_locations = data['locations']
-            countries_dict = {"Egypt": []}
-            seen = {}
-            for loc in old_locations:
-                name = loc.get('name', '')
-                if not name:
-                    continue
-                # Keep the last occurrence
-                seen[name] = {
-                    'name': name,
-                    'participants': int(loc.get('participants', 0)),
-                    'virtual': bool(loc.get('virtual', False)),
-                    'inPerson': bool(loc.get('inPerson', False)),
-                    'accepting': bool(loc.get('accepting', False))
-                }
-            countries_dict["Egypt"] = list(seen.values())
+            countries_dict = data['countries']
+            global_events = data.get('globalEvents', [])
             snapshot_timestamp = data.get('capturedAt')
         else:
             try:
@@ -218,6 +204,14 @@ def main():
             countries_dict = parse_paste_content(text)
             snapshot_timestamp = None
 
+    universal_locations = countries_dict.pop('Universal Event', [])
+    global_events.extend({
+        **location,
+        'name': 'Universal Event',
+        'description': location.get('description') or location.get('name', ''),
+        'scope': 'global'
+    } for location in universal_locations)
+
     # Process the countries_dict to build the new snapshot
     # Deduplicate within each country by location name (keeping the last occurrence)
     processed_countries = {}
@@ -225,7 +219,8 @@ def main():
         # Deduplicate by name, keeping the last
         seen = {}
         for loc in locs:
-            seen[loc['name']] = loc
+            identity = (loc.get('city') or loc['name'], loc.get('eventSite') or '')
+            seen[identity] = loc
         processed_countries[country] = list(seen.values())
 
     # Build the snapshot
@@ -237,7 +232,8 @@ def main():
 
     snapshot = {
         'timestamp': snapshot_timestamp,
-        'countries': processed_countries
+        'countries': processed_countries,
+        'globalEvents': global_events
     }
 
     # Update history.json
@@ -247,8 +243,15 @@ def main():
         try:
             with open(history_file, 'r', encoding='utf-8') as f:
                 history = json.load(f)
-        except Exception:
-            history = []
+        except (OSError, json.JSONDecodeError) as e:
+            print(f"Error: Could not read {history_file}; original preserved: {e}", file=sys.stderr)
+            sys.exit(1)
+        if not isinstance(history, list) or any(
+            not isinstance(item, dict) or not isinstance(item.get('countries'), dict)
+            for item in history
+        ):
+            print(f"Error: Invalid snapshot data in {history_file}; original preserved", file=sys.stderr)
+            sys.exit(1)
     now = datetime.now(timezone.utc)
     history = compact_history(history, snapshot, now)
     with open(history_file, 'w', encoding='utf-8') as f:
@@ -258,7 +261,8 @@ def main():
     latest_file = data_dir / 'latest.json'
     latest_data = {
         'capturedAt': snapshot_timestamp,
-        'countries': processed_countries
+        'countries': processed_countries,
+        'globalEvents': global_events
     }
     with open(latest_file, 'w', encoding='utf-8') as f:
         json.dump(latest_data, f, indent=2)
@@ -283,6 +287,7 @@ def main():
         print(f"Total locations in {country}: {len(locs)}")
         print(f"Total participants in {country}: {country_total}")
 
+    total_participants += sum(event.get('participants', 0) for event in global_events)
     print("\n" + "="*60)
     print(f"Total countries: {len(processed_countries)}")
     print(f"Total locations: {sum(len(locs) for locs in processed_countries.values())}")
