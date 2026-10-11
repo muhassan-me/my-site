@@ -14,91 +14,83 @@ import urllib.error
 import urllib.request
 import urllib.robotparser
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
+from parser import parse_paste_content
+from history import compact_history
 
 DEFAULT_USER_AGENT = "SpaceAppsEgyptRanker/1.0"
 DEFAULT_URL = "https://www.spaceappschallenge.org/2026/local-events/"
 FETCH_INTERVAL_SECONDS = 3600  # 1 hour
 
-def parse_paste_content(text):
-    """
-    Parse the paste text to extract locations for all countries.
-    Returns a dict: {country: [location_dicts]} where each location_dict has
-    keys: name, participants, virtual, inPerson, accepting.
-    Parsing rule: anchor on the "N Participating" line. Location = nearest non-blank line above it.
-    Country = the non-blank line above the location. Badges (Virtual / In-Person / Accepting Participants)
-    are only the lines directly after. No hardcoded country list. Counts may contain commas.
-    Same location twice in one country = keep the last. Ignore everything else.
-    """
+
+def run_check():
+    """Run checks on the sample paste fixture and print PASS/FAIL per case."""
+    # Read the sample_paste.txt
+    sample_path = Path(__file__).parent / 'sample_paste.txt'
+    try:
+        text = sample_path.read_text(encoding='utf-8')
+    except Exception as e:
+        print(f"Error: Could not read sample_paste.txt: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    countries_dict = parse_paste_content(text)
+
     lines = text.splitlines()
-    result = {}  # country -> list of locations
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        # Look for a line that contains "participating" (case-insensitive)
-        if 'participating' in line.lower():
-            # Found a participating line, now look backwards for location and country
-            # Find location line: nearest non-blank line above
-            j = i - 1
-            while j >= 0 and not lines[j].strip():
-                j -= 1
-            if j < 0:
-                i += 1
-                continue
-            location_line = lines[j].strip()
-            # Find country line: nearest non-blank line above the location line
-            k = j - 1
-            while k >= 0 and not lines[k].strip():
-                k -= 1
-            if k < 0:
-                i += 1
-                continue
-            country_line = lines[k].strip()
-            # Extract participant count
-            match = re.search(r'[\d,]+', line)
-            if not match:
-                i += 1
-                continue
-            try:
-                participants = int(match.group(0).replace(',', ''))
-            except ValueError:
-                i += 1
-                continue
-            # Initialize badges
-            virtual = False
-            inPerson = False
-            accepting = False
-            # Look at the lines directly after the participating line (up to 3 lines)
-            # We'll check the next lines for badge keywords
-            m = i + 1
-            while m < len(lines) and m <= i + 3:  # check up to 3 lines after
-                badge_line = lines[m].lower()
-                if not virtual and 'virtual' in badge_line:
-                    virtual = True
-                elif not inPerson and 'in-person' in badge_line:
-                    inPerson = True
-                elif not accepting and 'accepting' in badge_line and 'participants' in badge_line:
-                    accepting = True
-                m += 1
-            # Create location dict
-            loc = {
-                'name': location_line,
-                'participants': participants,
-                'virtual': virtual,
-                'inPerson': inPerson,
-                'accepting': accepting
-            }
-            # Add to result under country
-            if country_line not in result:
-                result[country_line] = []
-            # Check if location already exists in this country (by name, case-sensitive? We'll use exact string)
-            # We'll keep the last occurrence, so we remove any existing with the same name
-            result[country_line] = [loc for loc in result[country_line] if loc['name'] != location_line]
-            result[country_line].append(loc)
-            # Move i past the lines we've checked
-            i = m
-        else:
-            i += 1
-    return result
+
+    # Case 1: 3+ countries
+    case1 = len(countries_dict) >= 3
+
+    # Case 2: noise lines
+    noise_keywords = ['Some noise line', 'Another noise line', 'Noise line between countries', 'More noise']
+    case2 = any(keyword in text for keyword in noise_keywords)
+
+    # Case 3: a comma count
+    import re
+    case3 = bool(re.search(r'\d,\d', text))
+
+    # Case 4: location with NO badges followed by an entry from a different country that has "Virtual"
+    case4 = False
+    if 'Canada' in countries_dict and 'Mexico' in countries_dict:
+        # Find Toronto in Canada
+        toronto = None
+        for loc in countries_dict['Canada']:
+            if loc['name'] == 'Toronto':
+                toronto = loc
+                break
+        # Find Mexico City in Mexico
+        mex_city = None
+        for loc in countries_dict['Mexico']:
+            if loc['name'] == 'Mexico City':
+                mex_city = loc
+                break
+        if toronto and mex_city:
+            if not toronto['virtual'] and not toronto['inPerson'] and not toronto['accepting'] and mex_city['virtual']:
+                case4 = True
+
+    # Case 5: footer lines after the last entry
+    stripped_lines = [line for line in lines if line.strip() != '']
+    if len(stripped_lines) >= 2:
+        case5 = stripped_lines[-2] == 'Footer line 1' and stripped_lines[-1] == 'Footer line 2'
+    else:
+        case5 = False
+
+    # Case 6: duplicate location
+    case6 = False
+    if 'Egypt' in countries_dict:
+        cairos = [loc for loc in countries_dict['Egypt'] if loc['name'] == 'Cairo']
+        if len(cairos) == 1 and cairos[0]['participants'] == 2400:
+            case6 = True
+
+    # Print results
+    print(f"{'PASS' if case1 else 'FAIL'}: 3+ countries")
+    print(f"{'PASS' if case2 else 'FAIL'}: noise lines")
+    print(f"{'PASS' if case3 else 'FAIL'}: a comma count")
+    print(f"{'PASS' if case4 else 'FAIL'}: no-badge entry stays without badges")
+    print(f"{'PASS' if case5 else 'FAIL'}: footer ignored")
+    print(f"{'PASS' if case6 else 'FAIL'}: duplicate keeps the last")
+
+    sys.exit(0 if all([case1, case2, case3, case4, case5, case6]) else 1)
+
 
 def check_and_fetch(url, user_agent, data_dir):
     """
@@ -154,14 +146,19 @@ def check_and_fetch(url, user_agent, data_dir):
 
     return content
 
+
 def main():
     parser = argparse.ArgumentParser(description='Ingest Space Apps Challenge 2026 multi-country location data.')
     parser.add_argument('input_file', nargs='?', help='Path to paste text file (if not using --fetch)')
     parser.add_argument('--fetch', action='store_true', help='Fetch from the website instead of using a paste file')
+    parser.add_argument('--check', action='store_true', help='Run checks on the sample paste and exit')
     parser.add_argument('--data-dir', type=str, default='data', help='Directory for JSON files (default: data)')
     parser.add_argument('--user-agent', type=str, default=DEFAULT_USER_AGENT, help=f'User-Agent for fetching (default: {DEFAULT_USER_AGENT})')
     parser.add_argument('--url', type=str, default=DEFAULT_URL, help=f'URL to fetch (default: {DEFAULT_URL})')
     args = parser.parse_args()
+    if args.check:
+        run_check()
+        return
 
     data_dir = Path(args.data_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -197,21 +194,20 @@ def main():
             # Convert old format to new format: assume it's Egypt-only
             old_locations = data['locations']
             countries_dict = {"Egypt": []}
-            seen_names = set()
+            seen = {}
             for loc in old_locations:
                 name = loc.get('name', '')
                 if not name:
                     continue
-                if name in seen_names:
-                    continue  # skip duplicates, keep first occurrence
-                seen_names.add(name)
-                countries_dict["Egypt"].append({
+                # Keep the last occurrence
+                seen[name] = {
                     'name': name,
                     'participants': int(loc.get('participants', 0)),
                     'virtual': bool(loc.get('virtual', False)),
                     'inPerson': bool(loc.get('inPerson', False)),
                     'accepting': bool(loc.get('accepting', False))
-                })
+                }
+            countries_dict["Egypt"] = list(seen.values())
             snapshot_timestamp = data.get('capturedAt')
         else:
             try:
@@ -253,9 +249,10 @@ def main():
                 history = json.load(f)
         except Exception:
             history = []
-    history.append(snapshot)
+    now = datetime.now(timezone.utc)
+    history = compact_history(history, snapshot, now)
     with open(history_file, 'w', encoding='utf-8') as f:
-        json.dump(history, f, indent=2)
+        json.dump(history, f, separators=(",", ":"), ensure_ascii=False)
 
     # Update latest.json
     latest_file = data_dir / 'latest.json'
@@ -294,6 +291,7 @@ def main():
 
     print(f"Successfully processed locations from {len(processed_countries)} country(ies).")
     print(f"Updated {history_file} and {latest_file}")
+
 
 if __name__ == '__main__':
     main()

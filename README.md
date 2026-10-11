@@ -45,14 +45,13 @@ A static site to rank Egyptian locations of the NASA Space Apps Challenge 2026 l
     ```
     The script will check `robots.txt` and refuse to run if disallowed. It also enforces a minimum interval of one hour between fetches.
 
-### Using Bookmarklet (from Browser)
+### Capture bookmarklet
 
-1.  Create a bookmark with this URL (after replacing `YOUR_BOOKMARKLET_CODE_HERE`):
-    ```
-    javascript:(function(){fetch('https://www.spaceappschallenge.org/2026/local-events/').then(r=>r.text()).then(t=>{const lines=t.splitlines();const egyptLines=[];let inEgypt=false;for(const line of lines){if(line.trim().toLowerCase()==='egypt'){inEgypt=true;continue;}if(inEgypt&&line.trim()===''){if(egyptLines.length>=3){break;}continue;}if(inEgypt){egyptLines.push(line);}}if(egyptLines.length<3){alert('Could not parse Egypt data');return;}const location=egyptLines[0].trim();const participatingLine=egyptLines[1];const match=participatingLine.match(/[\\d,]+/);if(!match){alert('Could not find participant count');return;}const participants=parseInt(match[0].replace(/,/g,''));const badges={virtual:false,inPerson:false,accepting:false};for(let i=2;i<egyptLines.length;i++){const line=egyptLines[i].toLowerCase();if(!badges.virtual&&line.includes('virtual'))badges.virtual=true;else if(!badges.inPerson&&line.includes('in-person'))badges.inPerson=true;else if(!badges.accepting&&line.includes('accepting')&&line.includes('participants'))badges.accepting=true;}const data={capturedAt:new Date().toISOString(),locations:[{slug:location.toLowerCase().replace(/[^a-z0-9]+/g,'-'),name:location,participants:participants,virtual:badges.virtual,inPerson:badges.inPerson,accepting:badges.accepting,localLead:false}]};const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(data))));window.location='http://127.0.0.1:8080/#import='+encoded;});})()
-    ```
-    Note: For simplicity, the above bookmarklet is a basic example. A more robust version would parse the full page structure.
+```javascript
+javascript:(function(){const text=document.body.innerText;const payload={text:text,capturedAt:new Date().toISOString()};const json=JSON.stringify(payload);const encoded=btoa(unescape(encodeURIComponent(json)));window.location="http://localhost:8080/#import="+encoded;})()
+```
 
+1.  Create a bookmark with the URL above.
 2.  Visit the Space Apps 2026 Local Events page.
 3.  Click the bookmarklet to send the data to your local server.
 
@@ -78,7 +77,8 @@ my-site/
 │   └── past_events.json
 ├── tools/
 │   ├── ingest.py            # CLI ingestion tool
-│   ├── ingest_lib.py        # Shared ingestion logic
+│   ├── parser.py            # Shared parsing logic
+│   ├── capture.js           # Bookmarklet source
 │   └── sample_paste.txt
 └── README.md
 ```
