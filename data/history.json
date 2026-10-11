@@ -1399,5 +1399,170 @@
         "governorate": "Sharqia"
       }
     ]
+  },
+  {
+    "timestamp": "2026-10-11T13:53:58.524Z",
+    "locations": [
+      {
+        "slug": "port-said",
+        "name": "Port Said",
+        "participants": 83,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": true,
+        "governorate": "Port Said"
+      },
+      {
+        "slug": "6-of-october",
+        "name": "6 of October",
+        "participants": 532,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "alexandria",
+        "name": "Alexandria",
+        "participants": 650,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Alexandria"
+      },
+      {
+        "slug": "assiut",
+        "name": "Assiut",
+        "participants": 208,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Assiut"
+      },
+      {
+        "slug": "badr-city",
+        "name": "Badr City",
+        "participants": 59,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Beheira"
+      },
+      {
+        "slug": "cairo",
+        "name": "Cairo",
+        "participants": 2364,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Cairo"
+      },
+      {
+        "slug": "giza",
+        "name": "Giza",
+        "participants": 301,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Giza"
+      },
+      {
+        "slug": "hurghada",
+        "name": "Hurghada",
+        "participants": 62,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Red Sea"
+      },
+      {
+        "slug": "kafr-elsheikh",
+        "name": "Kafr elsheikh",
+        "participants": 159,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Kafr El Sheikh"
+      },
+      {
+        "slug": "luxor",
+        "name": "Luxor",
+        "participants": 44,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Luxor"
+      },
+      {
+        "slug": "mansoura",
+        "name": "Mansoura",
+        "participants": 200,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Dakahlia"
+      },
+      {
+        "slug": "qena",
+        "name": "Qena",
+        "participants": 73,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Qena"
+      },
+      {
+        "slug": "salam-misr",
+        "name": "SALAM MISR",
+        "participants": 8,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": null
+      },
+      {
+        "slug": "shebeen-el-kom",
+        "name": "Shebeen El-Kom",
+        "participants": 735,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Monufia"
+      },
+      {
+        "slug": "sohag",
+        "name": "Sohag",
+        "participants": 352,
+        "virtual": true,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sohag"
+      },
+      {
+        "slug": "zagazig",
+        "name": "Zagazig",
+        "participants": 180,
+        "virtual": false,
+        "inPerson": true,
+        "accepting": true,
+        "localLead": false,
+        "governorate": "Sharqia"
+      }
+    ]
   }
 ]
