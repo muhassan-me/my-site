@@ -528,11 +528,33 @@ function handleImportHash() {
         const decoded = decodeURIComponent(escape(atob(encoded)));
         const importData = JSON.parse(decoded);
         
-        // Validate basic structure
+        // Validate basic structure (old format: locations array)
         if (!importData || typeof importData !== 'object' || !Array.isArray(importData.locations)) {
             showError('خطأ في معالجة البيانات: Invalid import data format');
             return;
         }
+        
+        // Convert old format to new format
+        const countries = {"Egypt": []};
+        const seenNames = new Set();
+        for (const loc of importData.locations) {
+            if (typeof loc !== 'object' || loc === null) continue;
+            const name = loc.name;
+            if (!name || seenNames.has(name)) continue; // skip duplicates, keep first
+            seenNames.add(name);
+            countries["Egypt"].push({
+                name: name,
+                participants: Number(loc.participants) || 0,
+                virtual: Boolean(loc.virtual),
+                inPerson: Boolean(loc.inPerson),
+                accepting: Boolean(loc.accepting)
+            });
+        }
+        
+        const newData = {
+            capturedAt: importData.capturedAt || null,
+            countries: countries
+        };
         
         // Clear the hash BEFORE making the request
         history.replaceState(null, '', window.location.pathname);
@@ -544,7 +566,7 @@ function handleImportHash() {
                 'Content-Type': 'application/json',
                 'X-Import': '1'
             },
-            body: JSON.stringify(importData)
+            body: JSON.stringify(newData)
         })
         .then(response => {
             if (!response.ok) {

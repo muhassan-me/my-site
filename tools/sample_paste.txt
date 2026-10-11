@@ -1,47 +1,41 @@
-NASA Space Apps Challenge 2026
-Local Events
+Some noise line
+Another noise line
 
-Filter by country:
-
-EGYPT
-6 of October
-460 Participating
-Virtual
-In-Person
-Accepting Participants
-
-EGYPT
-Alexandria
-620 Participating
-Virtual
-In-Person
-
-EGYPT
-Assiut
-174 Participating
-Accepting Participants
-
-EGYPT
-Badr City
-57 Participating
-Virtual
-In-Person
-Accepting Participants
-
-EGYPT
+Egypt
 Cairo
-1000 Participating
+Participating: 2,364
 Virtual
 In-Person
 Accepting Participants
+
+Noise line between countries
+More noise
 
 USA
 New York
-500 Participating
+Participating: 1,200
 Virtual
 
-EGYPT
-6 of October
-470 Participating
+France
+Paris
+Participating: 500
+In-Person
+Accepting Participants
+
+Egypt
+Giza
+Participating: 301
 Virtual
 In-Person
+Accepting Participants
+
+Duplicate location test:
+Egypt
+Cairo
+Participating: 2400
+Virtual
+In-Person
+Accepting Participants
+
+Footer line 1
+Footer line 2

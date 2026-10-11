@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Ingest script for NASA Space Apps Challenge 2026 Egypt locations.
+Ingest script for NASA Space Apps Challenge 2026 multi-country locations.
 Parses a text paste of the events page or fetches from the website (with robots.txt check).
 Updates history.json and latest.json in the specified data directory.
 """
@@ -9,13 +9,11 @@ import json
 import re
 import sys
 import time
+from datetime import datetime, timezone
 import urllib.error
 import urllib.request
 import urllib.robotparser
 from pathlib import Path
-
-# Import our library
-from tools.ingest_lib import process_locations_data, load_governorates
 
 DEFAULT_USER_AGENT = "SpaceAppsEgyptRanker/1.0"
 DEFAULT_URL = "https://www.spaceappschallenge.org/2026/local-events/"
@@ -23,67 +21,84 @@ FETCH_INTERVAL_SECONDS = 3600  # 1 hour
 
 def parse_paste_content(text):
     """
-    Parse the paste text to extract Egypt locations.
-    Returns a list of location dicts.
+    Parse the paste text to extract locations for all countries.
+    Returns a dict: {country: [location_dicts]} where each location_dict has
+    keys: name, participants, virtual, inPerson, accepting.
+    Parsing rule: anchor on the "N Participating" line. Location = nearest non-blank line above it.
+    Country = the non-blank line above the location. Badges (Virtual / In-Person / Accepting Participants)
+    are only the lines directly after. No hardcoded country list. Counts may contain commas.
+    Same location twice in one country = keep the last. Ignore everything else.
     """
     lines = text.splitlines()
-    # Find indices of lines that (case-insensitive) and stripped equal "egypt"
-    egypt_indices = [i for i, line in enumerate(lines) if line.strip().lower() == 'egypt']
-    locations_dict = {}  # key: normalized name (lowercase, stripped)
-
-    for idx in egypt_indices:
-        # The chunk is the lines after this index until the next egypt index or end of file
-        chunk_lines = []
-        j = idx + 1
-        while j < len(lines) and (j not in egypt_indices):
-            chunk_lines.append(lines[j])
-            j += 1
-        # Skip empty lines at the start
-        while chunk_lines and not chunk_lines[0].strip():
-            chunk_lines.pop(0)
-        if not chunk_lines:
-            continue
-        location_line = chunk_lines[0].strip()
-        # Now find the participating line
-        participating_line = None
-        for line in chunk_lines[1:]:
-            if 'participating' in line.lower():
-                participating_line = line.strip()
-                break
-        if participating_line is None:
-            continue
-        # Extract number from participating_line
-        match = re.search(r'[\d,]+', participating_line)
-        if not match:
-            continue
-        try:
-            participants = int(match.group(0).replace(',', ''))
-        except ValueError:
-            continue
-        # Initialize badges
-        virtual = False
-        inPerson = False
-        accepting = False
-        # Look for badge lines in the entire chunk_lines
-        for line in chunk_lines:
-            lower_line = line.lower()
-            if not virtual and 'virtual' in lower_line:
-                virtual = True
-            elif not inPerson and 'in-person' in lower_line:
-                inPerson = True
-            elif not accepting and 'accepting' in lower_line and 'participants' in lower_line:
-                accepting = True
-        # Store in dictionary, overwriting any previous entry with the same normalized name
-        norm_name = location_line.lower().strip()
-        locations_dict[norm_name] = {
-            'name': location_line,
-            'participants': participants,
-            'virtual': virtual,
-            'inPerson': inPerson,
-            'accepting': accepting
-        }
-
-    return list(locations_dict.values())
+    result = {}  # country -> list of locations
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        # Look for a line that contains "participating" (case-insensitive)
+        if 'participating' in line.lower():
+            # Found a participating line, now look backwards for location and country
+            # Find location line: nearest non-blank line above
+            j = i - 1
+            while j >= 0 and not lines[j].strip():
+                j -= 1
+            if j < 0:
+                i += 1
+                continue
+            location_line = lines[j].strip()
+            # Find country line: nearest non-blank line above the location line
+            k = j - 1
+            while k >= 0 and not lines[k].strip():
+                k -= 1
+            if k < 0:
+                i += 1
+                continue
+            country_line = lines[k].strip()
+            # Extract participant count
+            match = re.search(r'[\d,]+', line)
+            if not match:
+                i += 1
+                continue
+            try:
+                participants = int(match.group(0).replace(',', ''))
+            except ValueError:
+                i += 1
+                continue
+            # Initialize badges
+            virtual = False
+            inPerson = False
+            accepting = False
+            # Look at the lines directly after the participating line (up to 3 lines)
+            # We'll check the next lines for badge keywords
+            m = i + 1
+            while m < len(lines) and m <= i + 3:  # check up to 3 lines after
+                badge_line = lines[m].lower()
+                if not virtual and 'virtual' in badge_line:
+                    virtual = True
+                elif not inPerson and 'in-person' in badge_line:
+                    inPerson = True
+                elif not accepting and 'accepting' in badge_line and 'participants' in badge_line:
+                    accepting = True
+                m += 1
+            # Create location dict
+            loc = {
+                'name': location_line,
+                'participants': participants,
+                'virtual': virtual,
+                'inPerson': inPerson,
+                'accepting': accepting
+            }
+            # Add to result under country
+            if country_line not in result:
+                result[country_line] = []
+            # Check if location already exists in this country (by name, case-sensitive? We'll use exact string)
+            # We'll keep the last occurrence, so we remove any existing with the same name
+            result[country_line] = [loc for loc in result[country_line] if loc['name'] != location_line]
+            result[country_line].append(loc)
+            # Move i past the lines we've checked
+            i = m
+        else:
+            i += 1
+    return result
 
 def check_and_fetch(url, user_agent, data_dir):
     """
@@ -140,7 +155,7 @@ def check_and_fetch(url, user_agent, data_dir):
     return content
 
 def main():
-    parser = argparse.ArgumentParser(description='Ingest Space Apps Egypt location data.')
+    parser = argparse.ArgumentParser(description='Ingest Space Apps Challenge 2026 multi-country location data.')
     parser.add_argument('input_file', nargs='?', help='Path to paste text file (if not using --fetch)')
     parser.add_argument('--fetch', action='store_true', help='Fetch from the website instead of using a paste file')
     parser.add_argument('--data-dir', type=str, default='data', help='Directory for JSON files (default: data)')
@@ -158,8 +173,8 @@ def main():
         if text is None:
             sys.exit(1)
         # Parse as paste
-        locations = parse_paste_content(text)
-        snapshot_timestamp = None  # Will be generated in process_locations_data
+        countries_dict = parse_paste_content(text)
+        snapshot_timestamp = None
     else:
         if not args.input_file:
             print("Error: Either provide an input file or use --fetch.", file=sys.stderr)
@@ -169,7 +184,7 @@ def main():
             print(f"Error: Input file not found: {input_path}", file=sys.stderr)
             sys.exit(1)
         if str(input_path).lower().endswith('.json'):
-            # Parse JSON input
+            # Parse JSON input (assumed to be old Egypt-only format)
             try:
                 with open(input_path, 'r', encoding='utf-8-sig') as f:
                     data = json.load(f)
@@ -179,7 +194,24 @@ def main():
             if 'locations' not in data:
                 print(f"Error: JSON file missing 'locations' key", file=sys.stderr)
                 sys.exit(1)
-            locations = data['locations']
+            # Convert old format to new format: assume it's Egypt-only
+            old_locations = data['locations']
+            countries_dict = {"Egypt": []}
+            seen_names = set()
+            for loc in old_locations:
+                name = loc.get('name', '')
+                if not name:
+                    continue
+                if name in seen_names:
+                    continue  # skip duplicates, keep first occurrence
+                seen_names.add(name)
+                countries_dict["Egypt"].append({
+                    'name': name,
+                    'participants': int(loc.get('participants', 0)),
+                    'virtual': bool(loc.get('virtual', False)),
+                    'inPerson': bool(loc.get('inPerson', False)),
+                    'accepting': bool(loc.get('accepting', False))
+                })
             snapshot_timestamp = data.get('capturedAt')
         else:
             try:
@@ -187,40 +219,81 @@ def main():
             except Exception as e:
                 print(f"Error: Could not read input file: {e}", file=sys.stderr)
                 sys.exit(1)
-            locations = parse_paste_content(text)
+            countries_dict = parse_paste_content(text)
             snapshot_timestamp = None
 
-    # Process locations using shared logic
-    try:
-        normalized_locations, unmapped_names, total_participants, captured_timestamp = process_locations_data(
-            locations, data_dir, snapshot_timestamp
-        )
-    except Exception as e:
-        print(f"Error processing locations: {e}", file=sys.stderr)
-        sys.exit(1)
+    # Process the countries_dict to build the new snapshot
+    # Deduplicate within each country by location name (keeping the last occurrence)
+    processed_countries = {}
+    for country, locs in countries_dict.items():
+        # Deduplicate by name, keeping the last
+        seen = {}
+        for loc in locs:
+            seen[loc['name']] = loc
+        processed_countries[country] = list(seen.values())
 
-    # Print unmapped warnings
-    for name in unmapped_names:
-        print(f"unmapped: {name}")
+    # Build the snapshot
+    if snapshot_timestamp is None:
+        snapshot_timestamp = datetime.now(timezone.utc).isoformat()
+    else:
+        # Ensure it's a string
+        snapshot_timestamp = str(snapshot_timestamp)
 
-    # Print table
-    print(f"{'Name':<20} {'Governorate':<15} {'Participants':>12} {'V':>3} {'IP':>3} {'A':>3} {'LL':>3}")
-    print("-" * 80)
-    for loc in normalized_locations:
-        name = loc['name']
-        gov = loc['governorate'] if loc['governorate'] is not None else ''
-        part = loc['participants']
-        v = 'X' if loc['virtual'] else ' '
-        ip = 'X' if loc['inPerson'] else ' '
-        a = 'X' if loc['accepting'] else ' '
-        ll = 'X' if loc['localLead'] else ' '
-        print(f"{name:<20} {gov:<15} {part:>12} {v:>3} {ip:>3} {a:>3} {ll:>3}")
-    print("-" * 80)
-    print(f"Total locations: {len(normalized_locations)}")
+    snapshot = {
+        'timestamp': snapshot_timestamp,
+        'countries': processed_countries
+    }
+
+    # Update history.json
+    history_file = data_dir / 'history.json'
+    history = []
+    if history_file.exists():
+        try:
+            with open(history_file, 'r', encoding='utf-8') as f:
+                history = json.load(f)
+        except Exception:
+            history = []
+    history.append(snapshot)
+    with open(history_file, 'w', encoding='utf-8') as f:
+        json.dump(history, f, indent=2)
+
+    # Update latest.json
+    latest_file = data_dir / 'latest.json'
+    latest_data = {
+        'capturedAt': snapshot_timestamp,
+        'countries': processed_countries
+    }
+    with open(latest_file, 'w', encoding='utf-8') as f:
+        json.dump(latest_data, f, indent=2)
+
+    # Compute total participants and print tables
+    total_participants = 0
+    for country, locs in processed_countries.items():
+        country_total = sum(loc['participants'] for loc in locs)
+        total_participants += country_total
+        # Print table for this country
+        print(f"\nCountry: {country}")
+        print(f"{'Name':<30} {'Participants':>12} {'V':>3} {'IP':>3} {'A':>3}")
+        print("-" * 60)
+        for loc in locs:
+            name = loc['name']
+            part = loc['participants']
+            v = 'X' if loc['virtual'] else ' '
+            ip = 'X' if loc['inPerson'] else ' '
+            a = 'X' if loc['accepting'] else ' '
+            print(f"{name:<30} {part:>12} {v:>3} {ip:>3} {a:>3}")
+        print("-" * 60)
+        print(f"Total locations in {country}: {len(locs)}")
+        print(f"Total participants in {country}: {country_total}")
+
+    print("\n" + "="*60)
+    print(f"Total countries: {len(processed_countries)}")
+    print(f"Total locations: {sum(len(locs) for locs in processed_countries.values())}")
     print(f"Total participants: {total_participants}")
+    print("="*60)
 
-    print(f"Successfully processed {len(normalized_locations)} locations from Egypt.")
-    print(f"Updated {data_dir / 'history.json'} and {data_dir / 'latest.json'}")
+    print(f"Successfully processed locations from {len(processed_countries)} country(ies).")
+    print(f"Updated {history_file} and {latest_file}")
 
 if __name__ == '__main__':
     main()

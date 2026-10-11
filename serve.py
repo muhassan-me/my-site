@@ -9,10 +9,7 @@ import os
 import urllib.parse
 from pathlib import Path
 import sys
-
-# Import our ingestion logic
-sys.path.append(str(Path(__file__).parent / 'tools'))
-from ingest_lib import process_locations_data
+from datetime import datetime, timezone
 
 PORT = 8080
 HOST = "127.0.0.1"
@@ -44,7 +41,7 @@ class SpaceAppsHandler(http.server.SimpleHTTPRequestHandler):
         except ValueError:
             self.send_error_json(400, "Invalid Content-Length")
             return
-            
+        
         if content_length > MAX_BODY_SIZE:
             self.send_error_json(413, "Payload Too Large")
             return
@@ -71,52 +68,121 @@ class SpaceAppsHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error_json(400, "Request body must be a JSON object")
             return
         
-        if 'locations' not in data:
-            self.send_error_json(400, "Missing 'locations' field")
+        # Determine format: old (locations array) or new (countries object)
+        if 'locations' in data and isinstance(data['locations'], list):
+            # Old format: assume Egypt-only
+            old_locations = data['locations']
+            countries_dict = {"Egypt": []}
+            seen_names = set()
+            for loc in old_locations:
+                if not isinstance(loc, dict):
+                    self.send_error_json(400, "Each location must be an object")
+                    return
+                name = loc.get('name', '')
+                if not name:
+                    continue
+                if name in seen_names:
+                    continue  # skip duplicates, keep first
+                seen_names.add(name)
+                countries_dict["Egypt"].append({
+                    'name': name,
+                    'participants': int(loc.get('participants', 0)),
+                    'virtual': bool(loc.get('virtual', False)),
+                    'inPerson': bool(loc.get('inPerson', False)),
+                    'accepting': bool(loc.get('accepting', False))
+                })
+        elif 'countries' in data and isinstance(data['countries'], dict):
+            # New format
+            countries_dict = data['countries']
+            # Validate each country's locations
+            for country, locs in countries_dict.items():
+                if not isinstance(locs, list):
+                    self.send_error_json(400, f"Locations for country '{country}' must be an array")
+                    return
+                for i, loc in enumerate(locs):
+                    if not isinstance(loc, dict):
+                        self.send_error_json(400, f"Location at index {i} in country '{country}' must be an object")
+                        return
+                    name = loc.get('name', '')
+                    if not name:
+                        continue
+                    if 'participants' not in loc:
+                        self.send_error_json(400, f"Location at index {i} in country '{country}' missing 'participants' field")
+                        return
+                    try:
+                        participants = int(loc['participants'])
+                        if participants < 0:
+                            raise ValueError("Negative participants")
+                    except (ValueError, TypeError):
+                        self.send_error_json(400, f"Location at index {i} in country '{country}' has invalid participants value: {loc['participants']}")
+                        return
+        else:
+            self.send_error_json(400, "Invalid format: expected 'locations' array (old) or 'countries' object (new)")
             return
         
-        if not isinstance(data['locations'], list):
-            self.send_error_json(400, "'locations' must be an array")
-            return
+        # Deduplicate within each country by name (keeping the last occurrence)
+        processed_countries = {}
+        for country, locs in countries_dict.items():
+            seen = {}
+            for loc in locs:
+                seen[loc['name']] = loc
+            processed_countries[country] = list(seen.values())
         
-        for i, loc in enumerate(data['locations']):
-            if not isinstance(loc, dict):
-                self.send_error_json(400, f"Location at index {i} must be an object")
-                return
-            if 'participants' not in loc:
-                self.send_error_json(400, f"Location at index {i} missing 'participants' field")
-                return
+        # Build the snapshot
+        captured_at = data.get('capturedAt')
+        if captured_at is None:
+            captured_at = datetime.now(timezone.utc).isoformat()
+        else:
+            captured_at = str(captured_at)
+        
+        snapshot = {
+            'timestamp': captured_at,
+            'countries': processed_countries
+        }
+        
+        # Update history.json
+        data_dir = Path(__file__).parent / 'data'
+        history_file = data_dir / 'history.json'
+        history = []
+        if history_file.exists():
             try:
-                participants = int(loc['participants'])
-                if participants < 0:
-                    raise ValueError("Negative participants")
-            except (ValueError, TypeError):
-                self.send_error_json(400, f"Location at index {i} has invalid participants value: {loc['participants']}")
-                return
+                with open(history_file, 'r', encoding='utf-8') as f:
+                    history = json.load(f)
+            except Exception:
+                history = []
+        history.append(snapshot)
+        with open(history_file, 'w', encoding='utf-8') as f:
+            json.dump(history, f, indent=2)
         
-        try:
-            data_dir = Path(__file__).parent / 'data'
-            normalized_locations, unmapped_names, total_participants, captured_timestamp = process_locations_data(
-                data['locations'], data_dir, data.get('capturedAt')
-            )
-            
-            response_data = {
-                'ok': True,
-                'count': len(normalized_locations),
-                'total': total_participants,
-                'unmapped': unmapped_names
-            }
-            
-            response_body = json.dumps(response_data).encode('utf-8')
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json; charset=utf-8')
-            self.send_header('Content-Length', str(len(response_body)))
-            self.end_headers()
-            self.wfile.write(response_body)
-            
-        except Exception as e:
-            print(f"Error processing ingest: {e}", file=sys.stderr)
-            self.send_error_json(500, f"Internal Server Error: {str(e)}")
+        # Update latest.json
+        latest_file = data_dir / 'latest.json'
+        latest_data = {
+            'capturedAt': captured_at,
+            'countries': processed_countries
+        }
+        with open(latest_file, 'w', encoding='utf-8') as f:
+            json.dump(latest_data, f, indent=2)
+        
+        # Compute total participants and location count
+        total_locations = 0
+        total_participants = 0
+        for country, locs in processed_countries.items():
+            total_locations += len(locs)
+            total_participants += sum(loc['participants'] for loc in locs)
+        
+        response_data = {
+            'ok': True,
+            'count': total_locations,
+            'total': total_participants,
+            'unmapped': []  # No unmapped in new format
+        }
+        
+        response_body = json.dumps(response_data).encode('utf-8')
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(response_body)))
+        self.end_headers()
+        self.wfile.write(response_body)
     
     def send_error_json(self, status_code, message):
         """Send a JSON error response with proper Content-Type and Content-Length"""

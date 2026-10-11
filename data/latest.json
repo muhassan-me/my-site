@@ -1,10 +1,10 @@
 {
-  "capturedAt": "2026-10-04T17:54:10.799Z",
+  "capturedAt": "2026-10-11T00:05:27.478Z",
   "locations": [
     {
       "slug": "port-said",
       "name": "Port Said",
-      "participants": 79,
+      "participants": 83,
       "virtual": true,
       "inPerson": true,
       "accepting": true,
@@ -14,7 +14,7 @@
     {
       "slug": "6-of-october",
       "name": "6 of October",
-      "participants": 462,
+      "participants": 532,
       "virtual": true,
       "inPerson": true,
       "accepting": true,
@@ -24,7 +24,7 @@
     {
       "slug": "alexandria",
       "name": "Alexandria",
-      "participants": 620,
+      "participants": 650,
       "virtual": true,
       "inPerson": true,
       "accepting": true,
@@ -34,7 +34,7 @@
     {
       "slug": "assiut",
       "name": "Assiut",
-      "participants": 174,
+      "participants": 208,
       "virtual": true,
       "inPerson": true,
       "accepting": true,
@@ -44,7 +44,7 @@
     {
       "slug": "badr-city",
       "name": "Badr City",
-      "participants": 57,
+      "participants": 59,
       "virtual": true,
       "inPerson": true,
       "accepting": true,
@@ -54,7 +54,7 @@
     {
       "slug": "cairo",
       "name": "Cairo",
-      "participants": 2149,
+      "participants": 2364,
       "virtual": true,
       "inPerson": true,
       "accepting": true,
@@ -64,7 +64,7 @@
     {
       "slug": "giza",
       "name": "Giza",
-      "participants": 250,
+      "participants": 301,
       "virtual": true,
       "inPerson": true,
       "accepting": true,
@@ -74,7 +74,7 @@
     {
       "slug": "hurghada",
       "name": "Hurghada",
-      "participants": 67,
+      "participants": 62,
       "virtual": false,
       "inPerson": true,
       "accepting": true,
@@ -84,7 +84,7 @@
     {
       "slug": "kafr-elsheikh",
       "name": "Kafr elsheikh",
-      "participants": 137,
+      "participants": 159,
       "virtual": true,
       "inPerson": true,
       "accepting": true,
@@ -94,7 +94,7 @@
     {
       "slug": "luxor",
       "name": "Luxor",
-      "participants": 33,
+      "participants": 44,
       "virtual": true,
       "inPerson": true,
       "accepting": true,
@@ -104,7 +104,7 @@
     {
       "slug": "mansoura",
       "name": "Mansoura",
-      "participants": 183,
+      "participants": 200,
       "virtual": false,
       "inPerson": true,
       "accepting": true,
@@ -114,7 +114,7 @@
     {
       "slug": "qena",
       "name": "Qena",
-      "participants": 68,
+      "participants": 73,
       "virtual": true,
       "inPerson": true,
       "accepting": true,
@@ -124,7 +124,7 @@
     {
       "slug": "salam-misr",
       "name": "SALAM MISR",
-      "participants": 7,
+      "participants": 8,
       "virtual": true,
       "inPerson": true,
       "accepting": true,
@@ -134,7 +134,7 @@
     {
       "slug": "shebeen-el-kom",
       "name": "Shebeen El-Kom",
-      "participants": 691,
+      "participants": 735,
       "virtual": false,
       "inPerson": true,
       "accepting": true,
@@ -144,7 +144,7 @@
     {
       "slug": "sohag",
       "name": "Sohag",
-      "participants": 338,
+      "participants": 352,
       "virtual": true,
       "inPerson": true,
       "accepting": true,
@@ -154,7 +154,7 @@
     {
       "slug": "zagazig",
       "name": "Zagazig",
-      "participants": 166,
+      "participants": 180,
       "virtual": false,
       "inPerson": true,
       "accepting": true,
