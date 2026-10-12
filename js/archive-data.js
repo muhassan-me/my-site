@@ -51,7 +51,12 @@ function resolveEdition(data, year) {
   const imports = data.archive?.editions?.[year]?.imports || [];
   for (const page of imports) {
     const provenance = { type: "page", sourceUrl: page.sourceUrl, capturedAt: page.capturedAt };
-    for (const record of page.records || []) {
+    for (const original of page.records || []) {
+      const record = repairArchivedRecord(original, page);
+      if (!isValidArchivedName(record.locationName || record.name)) {
+        unverified.push({ ...record, name: record.locationName || record.name, reasonKey: "invalidLocation", provenance: [provenance] });
+        continue;
+      }
       if (!record.country) {
         unverified.push({ ...record, name: record.locationName || record.city, reasonKey: "unverifiedCountry", provenance: [provenance] });
         continue;
@@ -64,7 +69,11 @@ function resolveEdition(data, year) {
         verification: "captured"
       });
     }
-    globalEvents.push(...(page.globalEvents || []).map(event => ({ ...event, provenance: [provenance] })));
+    globalEvents.push(...(page.globalEvents || []).map(event => ({
+      ...repairArchivedRecord(event, page),
+      name: "Universal Event",
+      provenance: [provenance]
+    })));
     unverified.push(...(page.unverified || []).map(record => ({ ...record, provenance: [provenance] })));
   }
   const uniqueGlobal = dedupeTracked(globalEvents, event => `${event.name}|${event.provenance[0]?.sourceUrl || ""}`);
@@ -84,6 +93,116 @@ function resolveEdition(data, year) {
     countries[country].push({ ...record, country });
   }
   return { countries, globalEvents: uniqueGlobal, unverified: uniqueUnverified, available: records.size > 0 || uniqueGlobal.length > 0 || uniqueUnverified.length > 0 || imports.length > 0, imports: imports.length };
+}
+
+function repairArchivedRecord(record, page) {
+  const lines = String(page.sourceText || "").split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  const title = (lines[0] || "").replace(/\s*[|–-]\s*Space Apps Challenge.*$/i, "").trim();
+  const storedName = record.locationName || record.city || record.name || "";
+  const name = isValidArchivedName(storedName) ? storedName : title;
+  const global = String(record.name || name).toLocaleLowerCase() === "universal event" ||
+    String(page.sourceUrl || "").toLocaleLowerCase().includes("universal-event");
+  let country = record.country || null;
+  if (!country && !global && name) {
+    const nameIndex = lines.findIndex(line => line.toLocaleLowerCase() === name.toLocaleLowerCase());
+    const subtitle = nameIndex > 0 ? lines[nameIndex - 1] : "";
+    if (isValidArchivedName(subtitle) && !isNavigationLabel(subtitle)) country = subtitle;
+  }
+  return {
+    ...record,
+    locationName: global ? "Universal Event" : name,
+    name: global ? "Universal Event" : name,
+    country: global ? null : country,
+    city: record.city || null,
+    eventSite: global ? null : (record.eventSite === "s" || !record.eventSite ? name : record.eventSite),
+    participants: Number.isFinite(record.participants) ? record.participants : storedCount(page.sourceText, "participants"),
+    teams: Number.isFinite(record.teams) ? record.teams : storedCount(page.sourceText, "teams"),
+    scope: global ? "global" : (record.scope || "local")
+  };
+}
+
+function isValidArchivedName(value) {
+  const name = String(value || "").trim().toLocaleLowerCase();
+  return name.length >= 2 && !isNavigationLabel(name);
+}
+
+function isNavigationLabel(value) {
+  return new Set(["s", "locations", "location", "welcome", "about", "challenges", "resources",
+    "event info", "teams", "the collective", "space apps challenge", "anywhere in the world"]).has(
+    String(value || "").trim().toLocaleLowerCase()
+  );
+}
+
+function storedCount(text, kind) {
+  const source = String(text || "");
+  const patterns = kind === "teams" ? [
+    /\bteams\s*\(\s*([\d,]+)\s*\)/i,
+    /\bhard work of\s*([\d,]+)\s*teams\b/i,
+    /\bteams\s*([\d,]+)\b/i
+  ] : [
+    /\bthank you to the\s*([\d,]+)\s*people\b/i,
+    /\bthe\s*([\d,]+)\s*people\s+who\s+joined\b/i
+  ];
+  for (const pattern of patterns) {
+    const match = pattern.exec(source);
+    if (match) return Number(match[1].replace(/,/g, ""));
+  }
+  return null;
+}
+
+function repairArchivedRecord(record, page) {
+  const lines = String(page.sourceText || "").split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  const titleName = (lines[0] || "").replace(/\s*[|–-]\s*Space Apps Challenge.*$/i, "").trim();
+  const name = isValidArchivedName(record.locationName || record.city || record.name) ?
+    (record.locationName || record.city || record.name) : titleName;
+  const isGlobal = String(name || record.name || "").toLowerCase() === "universal event" ||
+    String(page.sourceUrl || "").toLowerCase().includes("universal-event");
+  let country = record.country || null;
+  if (!country && !isGlobal && name) {
+    const index = lines.findIndex(line => line.toLocaleLowerCase() === name.toLocaleLowerCase());
+    if (index > 0 && isValidCountrySubtitle(lines[index - 1])) country = lines[index - 1];
+  }
+  const participants = Number.isFinite(record.participants) ? record.participants :
+    extractStoredCount(page.sourceText, "participants");
+  const teams = Number.isFinite(record.teams) ? record.teams : extractStoredCount(page.sourceText, "teams");
+  return {
+    ...record,
+    locationName: isGlobal ? "Universal Event" : name,
+    name: isGlobal ? "Universal Event" : name,
+    country: isGlobal ? null : country,
+    city: record.city || null,
+    eventSite: isGlobal ? null : (record.eventSite === "s" || !record.eventSite ? name : record.eventSite),
+    participants,
+    teams,
+    scope: isGlobal ? "global" : "local"
+  };
+}
+
+function isValidArchivedName(value) {
+  const name = String(value || "").trim();
+  if (name.length < 2) return false;
+  return !new Set(["s", "locations", "location", "welcome", "about", "challenges", "resources", "event info", "teams", "space apps challenge"]).has(name.toLocaleLowerCase());
+}
+
+function isValidCountrySubtitle(value) {
+  return isValidArchivedName(value) && !["anywhere in the world", "the collective"].includes(value.toLocaleLowerCase());
+}
+
+function extractStoredCount(text, kind) {
+  const source = String(text || "");
+  const patterns = kind === "teams" ? [
+    /\bteams?\s*\(\s*([\d,]+)\s*\)/i,
+    /\bhard work of\s*([\d,]+)\s*teams?\b/i,
+    /\bteams?\s*([\d,]+)\b/i
+  ] : [
+    /\bthank you to the\s*([\d,]+)\s*people\b/i,
+    /\bthe\s*([\d,]+)\s*people\s+who\s+joined\b/i
+  ];
+  for (const pattern of patterns) {
+    const match = pattern.exec(source);
+    if (match) return Number(match[1].replace(/,/g, ""));
+  }
+  return null;
 }
 
 function dedupeTracked(items, keyOf) {

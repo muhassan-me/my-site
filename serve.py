@@ -119,6 +119,30 @@ def archive_historical_page(data_dir, event_year, source_url, captured_at,
     }
 
 
+def validate_historical_record(record, event_year, default_source_url):
+    if not isinstance(record, dict):
+        raise ValueError("Historical location record must be an object")
+    name = str(record.get('locationName') or record.get('city') or record.get('name') or '').strip()
+    invalid_names = {
+        's', 'locations', 'location', 'welcome', 'about', 'challenges', 'resources',
+        'event info', 'teams', 'the collective', 'space apps challenge', 'anywhere in the world'
+    }
+    if len(name) < 2 or name.casefold() in invalid_names:
+        raise ValueError(f"Invalid historical location name: {name!r}")
+    record_year = record.get('eventYear', event_year)
+    if isinstance(record_year, bool) or record_year != event_year:
+        raise ValueError("Historical record eventYear does not match its import")
+    record_url = record.get('sourceUrl') or default_source_url
+    parsed_url = urllib.parse.urlsplit(record_url)
+    hostname = (parsed_url.hostname or '').lower()
+    if parsed_url.scheme != 'https' or not (hostname == 'spaceappschallenge.org' or hostname.endswith('.spaceappschallenge.org')):
+        raise ValueError(f"Missing or invalid source URL for historical location: {name}")
+    for field in ('participants', 'teams'):
+        value = record.get(field)
+        if value is not None and (isinstance(value, bool) or not isinstance(value, int) or value < 0):
+            raise ValueError(f"Invalid {field} count for historical location: {name}")
+
+
 class SpaceAppsHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=".", **kwargs)
@@ -254,6 +278,20 @@ class SpaceAppsHandler(http.server.SimpleHTTPRequestHandler):
                 parsed_page = parse_event_page(text)
             if not isinstance(parsed_page.get('globalEvents'), list) or not isinstance(parsed_page.get('unverified'), list):
                 self.send_error_json(400, "globalEvents and unverified must be arrays")
+                return
+            if 'records' in parsed_page:
+                historical_records = parsed_page['records']
+            else:
+                historical_records = [
+                    {**location, 'country': country}
+                    for country, locations in parsed_page.get('countries', {}).items()
+                    for location in locations
+                ]
+            try:
+                for record in historical_records:
+                    validate_historical_record(record, event_year, source_url)
+            except ValueError as error:
+                self.send_error_json(400, str(error))
                 return
             data_dir = Path(__file__).parent / 'data'
             try:

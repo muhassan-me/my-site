@@ -38,19 +38,21 @@ An unofficial local dashboard for country and event-location participant totals 
 
 The updated server must be running locally at `http://localhost:8080`. If it was already running before this change, restart it first. The exact bookmarklet URL is exported by `tools/capture.js`; print it with `node -p "require('./tools/capture.js')"`, then create a bookmark using that entire output as its URL.
 
-For 2021/2022 listing pages, the bookmarklet detects the edition from the hostname and downloads a JSON manifest containing the page's visible text, capture time, source URL, and same-host location-page links. This local file flow respects browser same-origin restrictions: the bookmarklet does not fetch individual pages cross-origin. Run the collector locally:
+For every listing from 2021 through 2026, the bookmarklet detects the edition from the old hostname or the modern path, then downloads the same JSON manifest containing visible listing text, capture time, listing URL, discovered detail URLs, and card text where rendered. The bookmarklet never fetches location pages cross-origin. Run the same local collector for every year:
 
 ```bash
 py tools/collect_locations.py space-apps-2021-locations.json
 ```
 
-The collector fetches each Space Apps detail URL over HTTPS, parses only available fields, and submits each record through the existing `/api/ingest` endpoint, waiting half a second between pages by default. It never assigns an unknown country or changes current `latest.json` / `history.json`. Unreported participant and team counts remain `null`. If pages fail, it writes a `.retry.json` file listing only failures; rerun with `py tools/collect_locations.py space-apps-2021-locations.retry.json`. Successfully imported pages can be rerun safely; the archive deduplicates by event year, page URL, and content hash. Listing and detail URLs/capture times are both retained.
+Replace the manifest filename with the downloaded file for the desired edition. The collector fetches each same-host Space Apps detail URL over HTTPS, parses fields available on the detail page, and uses an explicitly labeled listing-card count only when the detail page omits that count. It imports through the existing `/api/ingest` endpoint, waiting half a second between pages by default. It never assigns an unknown country or changes current `latest.json` / `history.json`. Missing counts remain `null`.
 
-For 2023 and later event pages, the bookmarklet still POSTs the visible page text, source URL, capture timestamp, and detected event year directly to `/api/ingest`. It displays a failure alert for rejected or inaccessible submissions. Neither capture path puts page text in a URL or executes captured content.
+If a listing has no detail links, the bookmarklet still saves a manifest marked `no-detail-links-found`; the collector writes a retry report and does not treat listing text as imported locations. The live 2024–2026 pages may currently render no location cards; their imports will remain incomplete until official detail links are available. If individual pages fail or cannot be parsed, the collector writes a `.retry.json` containing only failed URLs; rerun it with `py tools/collect_locations.py space-apps-2021-locations.retry.json`. Successfully imported pages can be repeated safely; the archive deduplicates by event year, source page URL, and content hash. Listing and detail URLs/capture times are retained.
+
+Neither capture nor collection executes captured text. Pages that are inaccessible, lack valid headings, or contain invalid explicit counts are reported as failures rather than successful records.
 
 Historical record conflicts use the latest `capturedAt` value; equal timestamps use lexicographically greater source URL. All source URLs and capture times are retained as provenance. A repeated city within the same country and edition is one record; identical city names in different countries remain separate. Workbook rows are lower-priority fallback records and are marked incomplete because their original page URLs and capture times are unavailable.
 
-In the 2021/2022 detail collector, each unique detail-page URL is an import record. A location without a verified country stays in the archive's `unverified` records and is excluded from country totals until its country can be established from source information. Available teams are stored alongside participants; missing values stay `null` and are displayed as not reported.
+Each edition uses the same detail-page archive schema. A location without a verified country stays in the archive's `unverified` records and is excluded from country totals until its country can be established from source information. Available teams are stored alongside participants; missing values stay `null` and are displayed as not reported.
 
 `data/archive.json` uses `{ "schemaVersion": 1, "editions": { "2023": { "imports": [...] } } }`. Each import retains its `eventYear`, `sourceUrl`, `capturedAt`, SHA-256 content hash, original visible text, parsed country/city/event-site records, global events, and unverified lines. Edition totals are calculated from deduplicated records; timestamped entries in `data/history.json` are never interpreted as event editions.
 
@@ -59,7 +61,7 @@ In the 2021/2022 detail collector, each unique detail-page URL is an import reco
 -   `data/latest.json`: Current snapshot of locations with capturedAt timestamp.
 -   `data/history.json`: Array of timestamped snapshots.
 -   `data/archive.json`: Edition-keyed historical imports with source text, page URLs, capture timestamps, parsed records, and duplicate hashes. Historical imports never update current files.
--   `tools/collect_locations.py`: Local HTTPS collector for individual 2021/2022 location pages; writes a retry manifest for failed pages.
+-   `tools/collect_locations.py`: Local HTTPS detail-page collector for all supported editions; writes a retry manifest for failed pages.
 -   `data/governorates.json`: Editable map from location name to governorate.
 -   `data/past_events.json`: Existing Egypt-only workbook data for 2021-2025; these rows are shown as incomplete-provenance fallback, not as bookmarklet captures.
 

@@ -28,7 +28,8 @@ body { min-height: 100%; }
 .table-wrap { border-radius: var(--radius-sm); }
 .location-link { border: 0; background: none; color: var(--text); padding: 0; text-align: start; cursor: pointer; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
 .location-link:hover { color: var(--accent); text-decoration-color: currentColor; }
-.record-source { display: block; color: var(--text-faint); font-size: var(--step--1); }
+.record-source { display: block; color: var(--text-faint); font-size: var(--step--1); overflow-wrap: anywhere; }
+.record-source:hover { color: var(--accent); }
 td.rank { white-space: nowrap; }
 .empty-cell { padding: var(--space-4); color: var(--text-dim); text-align: center; }
 .leaderboard { border-top: 1px solid var(--border); }

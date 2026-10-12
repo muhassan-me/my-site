@@ -7,7 +7,7 @@ from pathlib import Path
 
 import serve
 from tools.collect_locations import collect_manifest
-from tools.historical import detect_event_year, parse_historical_detail
+from tools.historical import detect_event_year, parse_historical_detail, parse_listing_card
 from tools.parser import parse_event_page
 
 
@@ -43,25 +43,62 @@ class HistoricalImportTests(unittest.TestCase):
             "https://www.spaceappschallenge.org/2023/locations/": 2023,
             "https://www.spaceappschallenge.org/nasa-space-apps-2024/2024-local-events/": 2024,
             "https://www.spaceappschallenge.org/2025/local-events/": 2025,
+            "https://www.spaceappschallenge.org/2026/local-events/": 2026,
         }
         for url, year in patterns.items():
             with self.subTest(url=url):
                 self.assertEqual(detect_event_year(url), year)
 
     def test_detail_fields_and_missing_counts(self):
-        html = "<title>Universal Event | NASA Space Apps</title><h1>Universal Event</h1><p>3,596 Participants</p><div>453 Teams</div>"
+        navigation = "<nav><ul><li>Locations</li><li>Challenges</li></ul></nav>"
+        html = (
+            "<title>Universal Event - Space Apps Challenge | 2021</title>" + navigation
+            + "<h2>Anywhere in the World</h2><h1>Universal Event</h1>"
+            + "<p>Teams(453)</p><p>Thank you to the3596people who joined this location.</p>"
+        )
         record, error = parse_historical_detail(html, "https://2021.spaceappschallenge.org/locations/universal-event", 2021)
         self.assertIsNone(error)
         self.assertEqual((record["participants"], record["teams"]), (3596, 453))
         self.assertEqual(record["eventYear"], 2021)
         self.assertEqual(record["locationName"], "Universal Event")
-        missing, error = parse_historical_detail("<h1>Small Event</h1>", "https://2022.spaceappschallenge.org/locations/small", 2022)
+        self.assertIsNone(record["country"])
+        self.assertEqual(record["scope"], "global")
+
+        ordinary = (
+            "<title>Aaruush, Chennai - Space Apps Challenge | 2021</title>" + navigation
+            + "<h2>India</h2><h1>Aaruush, Chennai</h1><p>Teams(125)</p>"
+            + "<p>Thank you to the1126people who joined this location.</p>"
+        )
+        city, error = parse_historical_detail(ordinary, "https://2021.spaceappschallenge.org/locations/aaruush-chennai/", 2021)
+        self.assertIsNone(error)
+        self.assertEqual((city["locationName"], city["country"], city["participants"], city["teams"]),
+                         ("Aaruush, Chennai", "India", 1126, 125))
+
+        missing_html = (
+            "<title>Bengaluru - Space Apps Challenge | 2022</title>" + navigation
+            + "<h2>India</h2><h1>Bengaluru</h1><p>Teams(15)</p>"
+            + "<p>Typical teams have 2-6 participants.</p>"
+        )
+        missing, error = parse_historical_detail(missing_html, "https://2022.spaceappschallenge.org/locations/bengaluru/", 2022)
         self.assertIsNone(error)
         self.assertIsNone(missing["participants"])
-        self.assertIsNone(missing["teams"])
-        failed, error = parse_historical_detail("<p>unstructured</p>", "https://2022.spaceappschallenge.org/locations/bad", 2022)
+        self.assertEqual(missing["teams"], 15)
+
+        failed, error = parse_historical_detail(
+            "<title>Space Apps Challenge</title>" + navigation + "<h1>Locations</h1>",
+            "https://2022.spaceappschallenge.org/locations/bad/", 2022
+        )
         self.assertIsNone(failed)
         self.assertTrue(error)
+        invalid_count, error = parse_historical_detail(
+            "<h1>Some City</h1><h2>Some Country</h2><p>Participants: -4</p><p>Teams(nope)</p>",
+            "https://2022.spaceappschallenge.org/locations/some-city/", 2022
+        )
+        self.assertIsNone(invalid_count)
+        self.assertTrue(error)
+        missing_url, error = parse_historical_detail("<h1>Some City</h1>", "", 2022)
+        self.assertIsNone(missing_url)
+        self.assertIn("source URL", error)
 
     def test_collector_reports_and_retries_failures(self):
         manifest = {
@@ -84,11 +121,55 @@ class HistoricalImportTests(unittest.TestCase):
         self.assertEqual(imported[0]["records"][0]["participants"], 9)
         self.assertEqual(imported[0]["records"][0]["teams"], 4)
         self.assertEqual(imported[0]["listingCapturedAt"], manifest["capturedAt"])
+        self.assertEqual(result["status"], "incomplete")
 
         retried = collect_manifest(result, fetcher=lambda url: "<h1>Recovered</h1><p>2 Participants</p>",
                       importer=lambda payload: imported.append(payload) or {"ok": True}, delay=0)
         self.assertEqual(retried["failures"], [])
         self.assertEqual(len(imported), 2)
+        self.assertEqual(retried["status"], "incomplete")
+
+    def test_unified_manifest_collection_uses_card_counts_only_as_fallback(self):
+        location_url = "https://www.spaceappschallenge.org/2023/locations/abha/"
+        manifest = {
+            "eventYear": 2023,
+            "sourceUrl": "https://www.spaceappschallenge.org/2023/locations/",
+            "capturedAt": "2026-10-12T10:00:00Z",
+            "locationUrls": [location_url],
+            "locationCards": [{"sourceUrl": location_url, "text": "ABHA\nSAUDI ARABIA\nAbha\n41 Participating\nVirtual"}]
+        }
+        imported = []
+        result = collect_manifest(
+            manifest,
+            fetcher=lambda url: "<title>Abha - Space Apps Challenge | 2023</title><h2>Saudi Arabia</h2><h1>Abha</h1>",
+            importer=lambda payload: imported.append(payload) or {"ok": True},
+            delay=0
+        )
+        record = imported[0]["records"][0]
+        self.assertEqual(record["participants"], 41)
+        self.assertEqual(record["participantsSource"], "listing-card")
+        self.assertIsNone(record["teams"])
+        self.assertEqual(record["country"], "Saudi Arabia")
+        self.assertEqual(result["failures"], [])
+        self.assertEqual(result["status"], "incomplete")
+        self.assertEqual(parse_listing_card("41 Participating\nTeams(5)"), {"participants": 41, "teams": 5})
+
+    def test_listing_without_detail_links_is_incomplete_not_imported(self):
+        manifest = {
+            "eventYear": 2025,
+            "sourceUrl": "https://www.spaceappschallenge.org/2025/local-events/",
+            "capturedAt": "2026-10-12T10:00:00Z",
+            "text": "Listing text must not become an import",
+            "locationUrls": [],
+        }
+        calls = []
+        result = collect_manifest(manifest, importer=lambda payload: calls.append(payload), delay=0)
+        self.assertEqual(calls, [])
+        self.assertEqual(result["imported"], [])
+        self.assertEqual(len(result["failures"]), 1)
+        self.assertEqual(result["status"], "incomplete")
+        self.assertEqual(result["discoveredCount"], 0)
+        self.assertIn("No location detail links", result["failures"][0]["error"])
 
     def test_existing_archive_format_dedup_and_current_data_isolation(self):
         original_module_path = serve.__file__
@@ -133,6 +214,33 @@ class HistoricalImportTests(unittest.TestCase):
                 self.assertEqual(imports[0]["listingCapturedAt"], "2026-10-11T09:00:00Z")
                 self.assertEqual(latest.read_text(encoding="utf-8"), '{"sentinel":"latest"}')
                 self.assertEqual(history.read_text(encoding="utf-8"), '[{"sentinel":"history"}]')
+            finally:
+                serve.__file__ = original_module_path
+
+    def test_api_rejects_invalid_names_and_counts(self):
+        original_module_path = serve.__file__
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            serve.__file__ = str(root / "serve.py")
+            try:
+                base = {
+                    "eventYear": 2021,
+                    "sourceUrl": "https://2021.spaceappschallenge.org/locations/valid/",
+                    "capturedAt": "2026-10-11T10:00:00Z",
+                    "text": "fixture source text",
+                    "records": [{"locationName": "Valid Town", "participants": 4, "teams": 2}],
+                    "globalEvents": [],
+                    "unverified": []
+                }
+                for record, expected in (({"locationName": "s", "participants": 4}, "Invalid historical location name"),
+                                         ({"locationName": "Valid Town", "participants": -1}, "invalid participants value"),
+                                         ({"locationName": "Valid Town", "participants": 1, "teams": "many"}, "invalid teams value")):
+                    payload = {**base, "records": [record]}
+                    request = RequestHarness(payload)
+                    request.do_POST()
+                    self.assertEqual(request.status, 400)
+                    self.assertIn(expected, json.loads(request.wfile.getvalue())["error"])
+                self.assertFalse((root / "data" / "archive.json").exists())
             finally:
                 serve.__file__ = original_module_path
 

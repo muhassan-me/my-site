@@ -123,7 +123,7 @@ function renderCountry(data, country, search, regionMode) {
       const source = item.provenance?.find(entry => entry.sourceUrl);
       const sourceLabel = source && /^https?:\/\//i.test(source.sourceUrl) ? document.createElement("a") : document.createElement("small");
       sourceLabel.className = "record-source";
-      sourceLabel.textContent = t(item.verification === "incomplete" ? "workbookIncompleteShort" : "sourceCapturedShort");
+      sourceLabel.textContent = source ? source.sourceUrl : t(item.verification === "incomplete" ? "workbookIncompleteShort" : "sourceCapturedShort");
       if (sourceLabel.tagName === "A") {
         sourceLabel.href = source.sourceUrl;
         sourceLabel.target = "_blank";
@@ -199,6 +199,16 @@ function renderDrawer(location, country) {
     body.append(teams);
   }
   body.append(chips, countryName);
+  const source = location.provenance?.find(entry => entry.sourceUrl);
+  if (source && /^https?:\/\//i.test(source.sourceUrl)) {
+    const sourceLink = document.createElement("a");
+    sourceLink.className = "record-source";
+    sourceLink.href = source.sourceUrl;
+    sourceLink.target = "_blank";
+    sourceLink.rel = "noopener noreferrer";
+    sourceLink.textContent = source.sourceUrl;
+    body.append(sourceLink);
+  }
 }
 
 function showEmpty(host, columns) {

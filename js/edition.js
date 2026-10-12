@@ -28,6 +28,18 @@ function renderSimpleRecords(sectionId, hostId, titleKey, records, nameOf, detai
       const cell = document.createElement("span");
       cell.className = index === 0 ? "leader-country" : index === 2 ? "leader-metric" : "leader-rank";
       cell.textContent = value;
+      if (index === 1) {
+        const source = record.provenance?.find(entry => entry.sourceUrl);
+        if (source && /^https?:\/\//i.test(source.sourceUrl)) {
+          const link = document.createElement("a");
+          link.className = "record-source";
+          link.href = source.sourceUrl;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = source.sourceUrl;
+          cell.append(document.createElement("br"), link);
+        }
+      }
       row.append(cell);
     });
     host.append(row);

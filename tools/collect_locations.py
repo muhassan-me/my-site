@@ -10,9 +10,9 @@ from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 try:
-    from .historical import YEAR_MAX, YEAR_MIN, detect_event_year, extract_visible_text, parse_historical_detail
+    from .historical import YEAR_MAX, YEAR_MIN, detect_event_year, extract_visible_text, parse_historical_detail, parse_listing_card
 except ImportError:
-    from historical import YEAR_MAX, YEAR_MIN, detect_event_year, extract_visible_text, parse_historical_detail
+    from historical import YEAR_MAX, YEAR_MIN, detect_event_year, extract_visible_text, parse_historical_detail, parse_listing_card
 
 DEFAULT_ENDPOINT = "http://localhost:8080/api/ingest"
 USER_AGENT = "SpaceAppsLocalArchive/1.0"
@@ -57,8 +57,24 @@ def collect_manifest(manifest, fetcher=fetch_page, importer=post_record, delay=0
     if not allowed_source(source_url):
         raise ValueError("Manifest sourceUrl must be an HTTPS Space Apps URL")
     urls = list(dict.fromkeys(manifest.get("locationUrls") or []))
+    cards = {
+        item.get("sourceUrl"): item.get("text", "")
+        for item in manifest.get("locationCards", [])
+        if isinstance(item, dict) and item.get("sourceUrl")
+    }
     if not urls:
-        raise ValueError("Manifest has no locationUrls; re-capture the locations listing")
+        return {
+            "eventYear": event_year,
+            "sourceUrl": source_url,
+            "capturedAt": manifest.get("capturedAt"),
+            "locationUrls": [],
+            "locationCards": [],
+            "imported": [],
+            "failures": [{"sourceUrl": source_url, "error": "No location detail links were discoverable; listing text was not imported as location records"}],
+            "warnings": [],
+            "status": "incomplete",
+            "discoveredCount": 0
+        }
 
     imported = []
     failures = []
@@ -73,6 +89,13 @@ def collect_manifest(manifest, fetcher=fetch_page, importer=post_record, delay=0
             record, error = parse_historical_detail(html, location_url, event_year)
             if error:
                 raise ValueError(error)
+            summary = parse_listing_card(cards.get(location_url, ""))
+            if record["participants"] is None and summary["participants"] is not None:
+                record["participants"] = summary["participants"]
+                record["participantsSource"] = "listing-card"
+            if record["teams"] is None and summary["teams"] is not None:
+                record["teams"] = summary["teams"]
+                record["teamsSource"] = "listing-card"
             captured_at = datetime.now(timezone.utc).isoformat()
             is_global = "universal event" in record["locationName"].lower() or "universal-event" in location_url.lower()
             payload = {
@@ -87,8 +110,8 @@ def collect_manifest(manifest, fetcher=fetch_page, importer=post_record, delay=0
                 "unverified": []
             }
             result = importer(payload)
-            imported.append({"sourceUrl": location_url, "duplicate": bool(result.get("duplicate"))})
             missing = [field for field in ("participants", "teams") if record[field] is None]
+            imported.append({"sourceUrl": location_url, "duplicate": bool(result.get("duplicate")), "complete": not missing})
             if missing:
                 warnings.append({"sourceUrl": location_url, "missing": missing})
         except Exception as error:
@@ -98,9 +121,13 @@ def collect_manifest(manifest, fetcher=fetch_page, importer=post_record, delay=0
         "sourceUrl": source_url,
         "capturedAt": manifest.get("capturedAt"),
         "locationUrls": [failure["sourceUrl"] for failure in failures],
+        "locationCards": [item for item in manifest.get("locationCards", [])
+                   if isinstance(item, dict) and item.get("sourceUrl") in {failure["sourceUrl"] for failure in failures}],
         "imported": imported,
         "failures": failures,
-        "warnings": warnings
+        "warnings": warnings,
+        "discoveredCount": len(urls),
+        "status": "complete" if urls and not failures and not warnings else "incomplete"
     }
 
 
@@ -128,11 +155,13 @@ def main():
     retry_path = manifest_path.with_name(manifest_path.stem + ".retry.json")
     if result["failures"]:
         _write_retry(retry_path, result)
-        print(f"Imported {len(result['imported'])}; failed {len(result['failures'])}. Retry manifest: {retry_path}")
+        print(f"Edition {result['eventYear']} INCOMPLETE: imported {len(result['imported'])}; failed {len(result['failures'])}. Retry manifest: {retry_path}")
         for failure in result["failures"]:
             print(f"FAILED {failure['sourceUrl']}: {failure['error']}", file=sys.stderr)
+    elif result["warnings"]:
+        print(f"Edition {result['eventYear']} INCOMPLETE: imported {len(result['imported'])}/{result['discoveredCount']} locations; some fields are unavailable.")
     else:
-        print(f"Imported {len(result['imported'])} locations for edition {result['eventYear']}; no failures.")
+        print(f"Edition {result['eventYear']} collection complete: imported {len(result['imported'])}/{result['discoveredCount']} locations.")
     for warning in result["warnings"]:
         print(f"INCOMPLETE {warning['sourceUrl']}: missing {', '.join(warning['missing'])}")
     return 1 if result["failures"] else 0
