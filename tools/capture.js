@@ -16,7 +16,7 @@ const bookmarklet = [
   'const root=roots.find(node=>node.querySelector("a[href]"))||roots[0]||document;',
   'let locationUrls=[],locationCards=[];',
   'if(isDetail){locationUrls=[page.href]}else{',
-  'for(const anchor of root.querySelectorAll("a[href]")){try{const target=new URL(anchor.href,page.href);if(target.hostname!==page.hostname)continue;const path=target.pathname.split("/").filter(Boolean);const hasLocationRoute=path.some((part,index)=>part==="locations"&&index<path.length-1);const card=anchor.closest("li[class*=local-event],article[class*=local-event],[data-location]");if(hasLocationRoute||card){locationUrls.push(target.href);locationCards.push({sourceUrl:target.href,text:(card||anchor).innerText||anchor.innerText})}}catch(error){}}',
+  'for(const anchor of root.querySelectorAll("a[href]")){try{const target=new URL(anchor.href,page.href);if(target.hostname!==page.hostname)continue;const path=target.pathname.split("/").filter(Boolean);const hasDetailRoute=path.some((part,index)=>(part==="locations"||part==="local-events")&&index<path.length-1);const card=anchor.closest("li[class*=local-event],article[class*=local-event],[data-location]");if(hasDetailRoute||card){locationUrls.push(target.href);locationCards.push({sourceUrl:target.href,text:(card||anchor).innerText||anchor.innerText})}}catch(error){}}',
   '}',
   'locationUrls=[...new Set(locationUrls)];',
   'const manifest={eventYear,sourceUrl:page.href,capturedAt:new Date().toISOString(),text:document.body.innerText,locationUrls,locationCards,discoveryStatus:locationUrls.length?"links-found":"no-detail-links-found"};',

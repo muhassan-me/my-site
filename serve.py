@@ -245,6 +245,10 @@ class SpaceAppsHandler(http.server.SimpleHTTPRequestHandler):
             if not isinstance(captured_at, str):
                 self.send_error_json(400, "Historical import requires a capture timestamp")
                 return
+            source_path = urllib.parse.urlsplit(source_url).path.rstrip('/').casefold()
+            if not isinstance(data.get('records'), list) and source_path.endswith(('/locations', '/local-events')):
+                self.send_error_json(400, "Listing-page text cannot be imported as location records; use a detail-page manifest and collector")
+                return
             try:
                 datetime.fromisoformat(captured_at.replace('Z', '+00:00'))
             except ValueError:

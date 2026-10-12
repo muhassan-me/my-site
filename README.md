@@ -38,13 +38,21 @@ An unofficial local dashboard for country and event-location participant totals 
 
 The updated server must be running locally at `http://localhost:8080`. If it was already running before this change, restart it first. The exact bookmarklet URL is exported by `tools/capture.js`; print it with `node -p "require('./tools/capture.js')"`, then create a bookmark using that entire output as its URL.
 
-For every listing from 2021 through 2026, the bookmarklet detects the edition from the old hostname or the modern path, then downloads the same JSON manifest containing visible listing text, capture time, listing URL, discovered detail URLs, and card text where rendered. The bookmarklet never fetches location pages cross-origin. Run the same local collector for every year:
+For every listing from 2021 through 2026, the bookmarklet detects the edition from the old hostname or the modern path, then downloads the same JSON manifest containing capture time, listing URL, discovered detail URLs, and card text where rendered. The bookmarklet never fetches location pages cross-origin. Run the same local collector for every year:
 
 ```bash
 py tools/collect_locations.py space-apps-2021-locations.json
 ```
 
-Replace the manifest filename with the downloaded file for the desired edition. The collector fetches each same-host Space Apps detail URL over HTTPS, parses fields available on the detail page, and uses an explicitly labeled listing-card count only when the detail page omits that count. It imports through the existing `/api/ingest` endpoint, waiting half a second between pages by default. It never assigns an unknown country or changes current `latest.json` / `history.json`. Missing counts remain `null`.
+Replace the manifest filename with the downloaded file for the desired edition. The collector fetches each same-host Space Apps detail URL over HTTPS, parses fields available on the detail page, and uses an explicitly labeled listing-card count only when the detail page omits that count. It imports through the existing `/api/ingest` endpoint, waiting half a second between pages by default. It never assigns an unknown country or changes current `latest.json` / `history.json`. Missing counts remain `null`. The server rejects attempts to turn a listing page's visible text into location records.
+
+For server-rendered listings, the collector can also make the manifest itself:
+
+```bash
+py tools/collect_locations.py --listing https://2021.spaceappschallenge.org/locations/
+```
+
+Modern listings currently load cards from the official public page after JavaScript runs, so their local HTML response does not contain detail anchors. Use the bookmarklet to capture those rendered URLs; the same Python collector then handles every detail page. A zero-link manifest is deliberately reported as incomplete rather than complete.
 
 If a listing has no detail links, the bookmarklet still saves a manifest marked `no-detail-links-found`; the collector writes a retry report and does not treat listing text as imported locations. The live 2024–2026 pages may currently render no location cards; their imports will remain incomplete until official detail links are available. If individual pages fail or cannot be parsed, the collector writes a `.retry.json` containing only failed URLs; rerun it with `py tools/collect_locations.py space-apps-2021-locations.retry.json`. Successfully imported pages can be repeated safely; the archive deduplicates by event year, source page URL, and content hash. Listing and detail URLs/capture times are retained.
 
@@ -62,6 +70,7 @@ Each edition uses the same detail-page archive schema. A location without a veri
 -   `data/history.json`: Array of timestamped snapshots.
 -   `data/archive.json`: Edition-keyed historical imports with source text, page URLs, capture timestamps, parsed records, and duplicate hashes. Historical imports never update current files.
 -   `tools/collect_locations.py`: Local HTTPS detail-page collector for all supported editions; writes a retry manifest for failed pages.
+-   `tools/prepare_historical_migration.py`: Builds a re-collected candidate/comparison under `data_test/`; it has no archive-promotion mode.
 -   `data/governorates.json`: Editable map from location name to governorate.
 -   `data/past_events.json`: Existing Egypt-only workbook data for 2021-2025; these rows are shown as incomplete-provenance fallback, not as bookmarklet captures.
 

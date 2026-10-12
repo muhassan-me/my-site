@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 from html.parser import HTMLParser
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit, urlunsplit
 
 
 YEAR_MIN = 2021
@@ -69,6 +69,57 @@ class VisiblePageParser(HTMLParser):
             self.title_parts.append(value)
 
 
+class LocationLinkParser(HTMLParser):
+    """Discover only same-site detail links from a saved listing response."""
+    def __init__(self, listing_url, event_year):
+        super().__init__(convert_charrefs=True)
+        self.listing_url = listing_url
+        self.event_year = event_year
+        self.urls = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag != "a":
+            return
+        href = dict(attrs).get("href")
+        if not href:
+            return
+        candidate = urljoin(self.listing_url, href)
+        if is_location_detail_url(candidate, self.listing_url, self.event_year):
+            # Fragments are not a separate source page.
+            parts = urlsplit(candidate)
+            self.urls.append(urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, "")))
+
+
+def is_location_detail_url(candidate, listing_url, event_year):
+    """Accept an official detail URL, without assuming one edition's route."""
+    target = urlsplit(candidate)
+    listing = urlsplit(listing_url)
+    if target.scheme != "https" or target.hostname != listing.hostname:
+        return False
+    parts = [part for part in target.path.split("/") if part]
+    if not parts:
+        return False
+    # 2021/2022: /locations/<slug>; 2023: /2023/locations/<slug>.
+    for index, part in enumerate(parts):
+        if part == "locations" and index + 1 < len(parts):
+            return True
+    # 2024 onward: /<year>/local-events/<slug>.
+    for index, part in enumerate(parts):
+        if part == "local-events" and index + 1 < len(parts):
+            return True
+    return False
+
+
+def discover_location_urls(html, listing_url, event_year=None):
+    """Return de-duplicated official detail URLs from actual listing HTML."""
+    year = event_year or detect_event_year(listing_url)
+    if not isinstance(year, int):
+        raise ValueError("Could not determine an event year from listing URL")
+    parser = LocationLinkParser(listing_url, year)
+    parser.feed(html)
+    return list(dict.fromkeys(parser.urls))
+
+
 def parse_historical_detail(html, source_url, event_year):
     if not isinstance(source_url, str) or urlsplit(source_url).scheme not in ("http", "https"):
         return None, "Missing or invalid source URL"
@@ -102,6 +153,8 @@ def parse_historical_detail(html, source_url, event_year):
         "sourceUrl": source_url,
         "locationName": location,
         "country": None if global_event else country,
+        # Old editions use an event-site name; modern pages use their h1 as the
+        # city/location. Do not manufacture a separate city when it is absent.
         "city": city,
         "eventSite": location if not city or location != city else None,
         "participants": participants,
@@ -166,7 +219,9 @@ def _count_value(text, labels):
             r"\bthe\s*([\d,]+)\s*people\s+who\s+(?:joined|participated|attended)\b",
             r"\bparticipants?\s*[:=]\s*\(?\s*([\d,]+)\s*\)?\b",
             r"\battendees?\s*[:=]\s*([\d,]+)\b",
-            r"(?<![\d-])([\d,]+)\s*(?:people|participants?|attendees?)\b",
+            r"(?<![\d-])([\d,]+)\s*(?:people|participants?|attendees?|participating)\b",
+            # React/Next markup can join number and label in extracted text.
+            r"(?<![\d-])([\d,]+)(?:people|participants?|attendees?|participating)\b",
         )
     for line in lines:
         for pattern in patterns:

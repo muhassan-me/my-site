@@ -6,8 +6,8 @@ from email.message import Message
 from pathlib import Path
 
 import serve
-from tools.collect_locations import collect_manifest
-from tools.historical import detect_event_year, parse_historical_detail, parse_listing_card
+from tools.collect_locations import collect_manifest, create_manifest
+from tools.historical import detect_event_year, discover_location_urls, parse_historical_detail, parse_listing_card
 from tools.parser import parse_event_page
 
 
@@ -48,6 +48,24 @@ class HistoricalImportTests(unittest.TestCase):
         for url, year in patterns.items():
             with self.subTest(url=url):
                 self.assertEqual(detect_event_year(url), year)
+
+    def test_listing_discovery_supports_old_and_modern_routes(self):
+        cases = (
+            (2021, "https://2021.spaceappschallenge.org/locations/", '<a href="/locations/cairo/">Cairo</a>'),
+            (2023, "https://www.spaceappschallenge.org/2023/locations/", '<a href="/2023/locations/abha/">Abha</a>'),
+            (2026, "https://www.spaceappschallenge.org/2026/local-events/", '<a href="/2026/local-events/cairo/">Cairo</a>'),
+        )
+        for year, listing, body in cases:
+            with self.subTest(year=year):
+                urls = discover_location_urls(f'<a href="/2026/challenges/">ignore</a>{body}{body}', listing, year)
+                self.assertEqual(len(urls), 1)
+        manifest = create_manifest(
+            "https://www.spaceappschallenge.org/2026/local-events/",
+            fetcher=lambda url: '<a href="/2026/local-events/cairo/">Cairo</a>',
+            captured_at="2026-10-12T10:00:00Z",
+        )
+        self.assertEqual(manifest["eventYear"], 2026)
+        self.assertEqual(manifest["discoveryStatus"], "links-found")
 
     def test_detail_fields_and_missing_counts(self):
         navigation = "<nav><ul><li>Locations</li><li>Challenges</li></ul></nav>"
@@ -121,6 +139,7 @@ class HistoricalImportTests(unittest.TestCase):
         self.assertEqual(imported[0]["records"][0]["participants"], 9)
         self.assertEqual(imported[0]["records"][0]["teams"], 4)
         self.assertEqual(imported[0]["listingCapturedAt"], manifest["capturedAt"])
+        self.assertEqual(imported[0]["records"][0]["listingSourceUrl"], manifest["sourceUrl"])
         self.assertEqual(result["status"], "incomplete")
 
         retried = collect_manifest(result, fetcher=lambda url: "<h1>Recovered</h1><p>2 Participants</p>",
@@ -153,6 +172,17 @@ class HistoricalImportTests(unittest.TestCase):
         self.assertEqual(result["failures"], [])
         self.assertEqual(result["status"], "incomplete")
         self.assertEqual(parse_listing_card("41 Participating\nTeams(5)"), {"participants": 41, "teams": 5})
+
+    def test_modern_detail_markup_and_joined_participating_count(self):
+        html = "<h2>Egypt</h2><h1>6 of October</h1><div>549Participating</div>"
+        record, error = parse_historical_detail(
+            html, "https://www.spaceappschallenge.org/2026/local-events/6-of-october/", 2026
+        )
+        self.assertIsNone(error)
+        self.assertEqual(record["locationName"], "6 of October")
+        self.assertEqual(record["country"], "Egypt")
+        self.assertEqual(record["participants"], 549)
+        self.assertIsNone(record["teams"])
 
     def test_listing_without_detail_links_is_incomplete_not_imported(self):
         manifest = {
@@ -244,7 +274,7 @@ class HistoricalImportTests(unittest.TestCase):
             finally:
                 serve.__file__ = original_module_path
 
-    def test_2023_to_2025_text_imports_still_archive(self):
+    def test_listing_text_imports_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             old_path = serve.__file__
@@ -259,11 +289,9 @@ class HistoricalImportTests(unittest.TestCase):
                     }
                     request = RequestHarness(payload)
                     request.do_POST()
-                    self.assertEqual(request.status, 200)
-                archive = json.loads((root / "data" / "archive.json").read_text(encoding="utf-8"))
-                self.assertEqual(set(archive["editions"]), {"2023", "2024", "2025"})
-                for edition in archive["editions"].values():
-                    self.assertEqual(edition["imports"][0]["records"][0]["participants"], 12)
+                    self.assertEqual(request.status, 400)
+                    self.assertIn("Listing-page text", json.loads(request.wfile.getvalue())["error"])
+                self.assertFalse((root / "data" / "archive.json").exists())
             finally:
                 serve.__file__ = old_path
 
