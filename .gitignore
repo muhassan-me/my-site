@@ -6,3 +6,13 @@ data_test/
 __pycache__/
 *.pyc
 update.ps1
+
+.kilo/
+data_test/
+data_backup/
+paste.json
+paste.txt
+*.bak
+__pycache__/
+.venv/
+.env
